@@ -1,4 +1,4 @@
-les.yy.c
+lex.yy.c
 compilador
-test_input
+test_input.jsc
 test_output

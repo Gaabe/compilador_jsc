@@ -1,0 +1,29 @@
+%option yylineno
+
+%%
+("//".*\n)|([ \t\n]+)	;
+
+"("|")"|"["|"]"|"{"|"}"|","|";"|"="|"+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!="|"&&"|"||"|"!"	fprintf(yyout, "SYM\t\"%s\"\t%d\n", yytext, yylineno);
+
+"let"|"def"|"if"|"else"|"while"|"return"|"break"|"continue"	fprintf(yyout, "KEY\t\"%s\"\t%d\n", yytext, yylineno);				
+
+[a-zA-Z][a-zA-Z0-9_]*	fprintf(yyout, "ID\t\"%s\"\t%d\n", yytext, yylineno);
+[0-9]+					fprintf(yyout, "DEC\t\"%s\"\t%d\n", yytext, yylineno);
+
+.					{fprintf(yyout, "ERROR\t\"%s\"\t%d\n", yytext, yylineno);
+						return 1;};
+
+%%
+
+int yywrap(void) {
+	return 1;
+}
+
+int main(int argc, char *argv[]) {
+	yyin = fopen(argv[1], "r");
+	yyout = fopen(argv[2], "w");
+	yylex();
+	fclose(yyin);
+	fclose(yyout);
+	return 0;
+}
