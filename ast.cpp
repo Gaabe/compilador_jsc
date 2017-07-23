@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include <list>
-#include "AST_Nai_Lore.hpp"
+#include "ast.hpp"
 
 using namespace std;
 
