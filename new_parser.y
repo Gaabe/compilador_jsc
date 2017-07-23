@@ -14,21 +14,21 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 %}
 
 %union {
-    Node *node;
-    NBlock *block;
-    NExpression *expr;
-    NStatement *stmt;
-    NIdentifier *ident;
-    NVariableDeclaration *var_decl;
-    std::vector<NVariableDeclaration*> *varvec;
-    std::vector<NExpression*> *exprvec;
-    std::string *string;
-    int token;
+		Node *node;
+		NBlock *block;
+		NExpression *expr;
+		NStatement *stmt;
+		NIdentifier *ident;
+		NVariableDeclaration *var_decl;
+		std::vector<NVariableDeclaration*> *varvec;
+		std::vector<NExpression*> *exprvec;
+		std::string *string;
+		int token;
 }
 
 /* Define our terminal symbols (tokens). This should
-   match our tokens.l lex file. We also define the node type
-   they represent.
+	 match our tokens.l lex file. We also define the node type
+	 they represent.
  */
 
 %token T_OPENPAR;
@@ -71,9 +71,9 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 
 
 /* Define the type of node our nonterminal symbols represent.
-   The types refer to the %union declaration above. Ex: when
-   we call an ident (defined by union type ident) we are really
-   calling an (NIdentifier*). It makes the compiler happy.
+	 The types refer to the %union declaration above. Ex: when
+	 we call an ident (defined by union type ident) we are really
+	 calling an (NIdentifier*). It makes the compiler happy.
  */
 %type <ident> ident
 %type <expr> numeric expr 
@@ -92,42 +92,129 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 %left  T_MUL T_DIV
 %left  T_NOT
 
-%start program
+%start Program
 
 
 %%
 
-Program     = (DecVar | DecFunc)*
+Program:
+	Program DecVar                                                           {}
+	| Program DecFunc |                                                      {}
+	| %empty                                                                 {}
+;
 
-DecVar      = T_LET T_ID (T_ASSIGN Expr)? T_SEMICOL
+DecVar:
+	T_LET T_ID AssignExprOrNothing T_SEMICOL
 
-DecFunc     = T_DEF T_ID T_OPENPAR ParamList? T_CLOSEPAR Block
-ParamList   = T_ID (T_COMMA T_ID)*
+AssignExprOrNothing:
+	T_ASSIGN Expr        													 {}
+	| %empty             													 {}
+;
 
-Block       = T_OPENCURL DecVar* Stmt* T_CLOSECURL
+DecFunc:
+	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block                 {}
+;
 
-Stmt        = Assign T_SEMICOL |
-              FuncCall T_SEMICOL |
-              T_IF T_OPENPAR Expr T_CLOSEPAR Block (T_ELSE Block)? |
-              T_WHILE T_OPENPAR Expr T_CLOSEPAR Block |
-              T_RETURN Expr? T_SEMICOL |
-              T_BREAK T_SEMICOL |
-              T_CONTINUE T_SEMICOL
+ParamListOrNothing:
+	ParamList            													 {}
+	| %empty             													 {}
+;
 
-Assign      = T_ID T_ASSIGN Expr
-FuncCall    = T_ID T_OPENPAR ArgList? T_CLOSEPAR
-ArgList     = Expr (T_COMMA Expr)*
 
-Expr        = Expr BinOp Expr |
-              UnOp Expr |
-              T_OPENPAR Expr T_CLOSEPAR |
-              FuncCall |
-              T_NUMBER |
-              T_ID
 
-BinOp       = T_PLUS | T_MINUS | T_MUL | T_DIV | T_LT | T_LTE |
-              T_GT | T_GTE | T_EQUAL | T_NOTEQUAL | T_AND | T_OR
-UnOp        = T_MINUS  | T_NOT
+
+ParamList:
+	T_ID NCommaIdOrNothing 													 {}
+;
+
+NCommaIdOrNothing:
+	NCommaIdOrNothing T_COMMA T_ID    										 {}
+	| %empty																 {}
+
+Block:
+	T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL
+
+NDecVarOrNothing:
+	NDecVarOrNothing DecVar 												 {}
+	| %empty																 {}
+;
+
+NStmtOrNothing:
+	NStmtOrNothing Stmt 													 {}
+	| %empty																 {}
+;
+
+
+Stmt:
+	Assign T_SEMICOL														 {}
+	|FuncCall T_SEMICOL														 {}
+	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing				 {}
+	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block 								 {}
+	|T_RETURN ExprOrNothing T_SEMICOL										 {}
+	|T_BREAK T_SEMICOL														 {}
+	|T_CONTINUE T_SEMICOL													 {}
+;
+
+ElseBlockOrNothing:
+	T_ELSE Block 															 {}
+	| %empty																 {}
+;
+
+ExprOrNothing:
+	Expr 																	 {}
+	| %empty 																 {}
+;
+
+Assign:
+	T_ID T_ASSIGN Expr 														 {}
+;
+
+FuncCall:
+	T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR								 {}
+;
+
+ArgListOrNothing:
+	ArgList 																 {}
+	| %empty																 {}
+;
+
+ArgList:
+	Expr NCommaExprOrNothing 												 {}
+;
+
+NCommaExprOrNothing:
+	NCommaExprOrNothing T_COMMA Expr 										 {}
+	| %empty
+;
+
+Expr:
+	Expr BinOp Expr 														 {}
+	|UnOp Expr 																 {}
+	|T_OPENPAR Expr T_CLOSEPAR 												 {}
+	|FuncCall 																 {}
+	|T_NUMBER 																 {}
+	|T_ID 																	 {}
+;
+
+BinOp:
+	T_PLUS																	 {}
+	|T_MINUS																 {}
+	|T_MUL 																	 {}
+	| T_DIV  																 {}
+	| T_LT 																	 {}
+	| T_LTE 																 {}
+	| T_GT 																	 {} 
+	| T_GTE 																 {}
+	| T_EQUAL 																 {}
+	| T_NOTEQUAL 															 {}
+	| T_AND 																 {}
+	| T_OR 																	 {}
+;
+
+UnOp:
+	T_MINUS 																 {}
+	| T_NOT 																 {}
+;
 
 %%
 //extern FILE *yyin;
