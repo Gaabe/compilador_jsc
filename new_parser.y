@@ -1,18 +1,17 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+#include "new_ast.hpp"
 extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
 extern "C" FILE *yyout;
-//extern "C" FILE *yyin;
-//#include "node.h"
-//NBlock *programBlock; /* the top level root node of our final AST */
 
 void yyerror(const char *s);
 
 
 %}
+
 /*
 %union {
 		Node *node;
@@ -202,8 +201,8 @@ Expr:
 
 BinOp:
 	T_PLUS																	 {}
-	|T_MINUS																 {}
-	|T_MUL 																	 {}
+	| T_MINUS																 {}
+	| T_MUL 																 {}
 	| T_DIV  																 {}
 	| T_LT 																	 {}
 	| T_LTE 																 {}
