@@ -9,8 +9,7 @@ extern "C" FILE *yyout;
 //#include "node.h"
 //NBlock *programBlock; /* the top level root node of our final AST */
 
-int yylex(void);
-void yyerror(const char *s) { printf("ERROR: %sn", s); }
+void yyerror(const char *s);
 
 
 %}
@@ -77,14 +76,15 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 	 The types refer to the %union declaration above. Ex: when
 	 we call an ident (defined by union type ident) we are really
 	 calling an (NIdentifier*). It makes the compiler happy.
- */
+
 %type <ident> ident
 %type <expr> numeric expr 
 %type <varvec> func_decl_args
 %type <exprvec> call_args
-%type <block> program stmts block
+%type <block> Program Stmt Block
 %type <stmt> stmt var_decl func_decl
 %type <token> comparison
+ */
 
 
 
@@ -102,7 +102,7 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 
 Program:
 	Program DecVar                                                           {}
-	| Program DecFunc |                                                      {}
+	| Program DecFunc	                                                     {}
 	| %empty                                                                 {}
 ;
 
@@ -220,6 +220,10 @@ UnOp:
 ;
 
 %%
+
+
+void yyerror(const char *s) { printf("ERROR: %s", s); }
+
 
 main(int argc, char *argv[]){
 	yyin = fopen(argv[1], "r");
