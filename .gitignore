@@ -1,4 +1,6 @@
 lex.yy.c
 compilador
 test_input.jsc
-test_output
+test_output.ast
+new_parser.tab.c
+new_parser.tab.h
