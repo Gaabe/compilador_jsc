@@ -1,5 +1,6 @@
 %{
 	#include "new_parser.tab.h"
+	#define YY_DECL extern "C" int yylex()
 %}
 %option yylineno
 

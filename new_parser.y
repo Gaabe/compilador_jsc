@@ -9,7 +9,7 @@ extern "C" FILE *yyout;
 //#include "node.h"
 //NBlock *programBlock; /* the top level root node of our final AST */
 
-extern int yylex();
+int yylex(void);
 void yyerror(const char *s) { printf("ERROR: %sn", s); }
 
 
