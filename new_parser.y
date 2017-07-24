@@ -108,6 +108,7 @@ Program:
 
 DecVar:
 	T_LET T_ID AssignExprOrNothing T_SEMICOL
+;
 
 AssignExprOrNothing:
 	T_ASSIGN Expr        													 {}
