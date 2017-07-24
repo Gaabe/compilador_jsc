@@ -1,4 +1,8 @@
+%{
+	#include "new_parser.tab.h"
+%}
 %option yylineno
+
 
 %%
 ("//".*\n)|([ \t\n]+)	;
@@ -9,7 +13,7 @@
 "]"						return T_CLOSEBRAC;
 "{"						return T_OPENCURL;
 "}"						return T_CLOSECURL;
-","            			return T_COL;
+","            			return T_COMMA;
 ";"            			return T_SEMICOL;
 "="                		return T_ASSIGN;
 "+"                		return T_PLUS;
@@ -46,11 +50,11 @@ int yywrap(void) {
 	return 1;
 }
 
-int main(int argc, char *argv[]) {
-	yyin = fopen(argv[1], "r");
-	yyout = fopen(argv[2], "w");
-	yylex();
-	fclose(yyin);
-	fclose(yyout);
-	return 0;
-}
+//int main(int argc, char *argv[]) {
+//	yyin = fopen(argv[1], "r");
+//	yyout = fopen(argv[2], "w");
+//	yylex();
+//	fclose(yyin);
+//	fclose(yyout);
+//	return 0;
+//}

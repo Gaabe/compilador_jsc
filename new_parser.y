@@ -4,15 +4,17 @@
 extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
-#include "node.h"
-NBlock *programBlock; /* the top level root node of our final AST */
+extern "C" FILE *yyout;
+//extern "C" FILE *yyin;
+//#include "node.h"
+//NBlock *programBlock; /* the top level root node of our final AST */
 
 extern int yylex();
 void yyerror(const char *s) { printf("ERROR: %sn", s); }
 
 
 %}
-
+/*
 %union {
 		Node *node;
 		NBlock *block;
@@ -25,6 +27,7 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 		std::string *string;
 		int token;
 }
+*/
 
 /* Define our terminal symbols (tokens). This should
 	 match our tokens.l lex file. We also define the node type
@@ -37,7 +40,7 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 %token T_CLOSEBRAC;
 %token T_OPENCURL;
 %token T_CLOSECURL;
-%token T_COL;
+%token T_COMMA;
 %token T_SEMICOL;
 %token T_ASSIGN;
 %token T_PLUS;
@@ -59,8 +62,8 @@ void yyerror(const char *s) { printf("ERROR: %sn", s); }
 %token T_IF;
 %token T_ELSE;
 %token T_WHILE;
-%token;
 %token T_BREAK;
+%token T_RETURN;
 %token T_CONTINUE;        
 
 %token T_ID;
@@ -217,13 +220,15 @@ UnOp:
 ;
 
 %%
-//extern FILE *yyin;
-//
-//main(){
-//    do {
-//	yyparse();
-//	} while(!feof(yyin));
-//}
-//
-//yyerror(char *s){
-//}
+
+main(int argc, char *argv[]){
+	yyin = fopen(argv[1], "r");
+	yyout = fopen(argv[2], "w");
+    do {
+		yyparse();
+	} while (!feof(yyin));
+	fclose(yyin);
+	fclose(yyout);
+	return 0;
+}
+
