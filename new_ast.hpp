@@ -15,4 +15,6 @@ class Node {
 
 void importChildren(Node* mainNode, Node* nodeToImport, const char* name);
 
+void importChildrenThenDeleteNode(Node* mainNode, Node* nodeToImport, const char* name);
+
 void printTree(Node* n);
