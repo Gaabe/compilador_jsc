@@ -151,11 +151,10 @@ ParamList:
 							 Node n2 = Node($1);
 							 Node* ptr = &n2;
 							 n.addChildren(ptr);
+ 							 Node* ptr2 = &n;
 							 if($2->value != "empty"){
-							 	n.importChildren($2, "paramlist");
+							 	importChildren(ptr2, $2, "paramlist");
 							 }
-							 Node* ptr2 = &n;
-
 							 $$ = ptr2;}
 ;
 
@@ -175,13 +174,13 @@ NCommaIdOrNothing:
 
 Block:
 	T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL	{Node n = Node("block");
+															 Node* ptr2 = &n;
 															 if($2->value != "empty"){
-															 	n.importChildren($2, "decvar");
+															 	importChildren(ptr2, $2, "decvar");
 															 }
 															 if($3->value != "empty"){
-															 	n.importChildren($3, "stmt");
+															 	importChildren(ptr2, $3, "stmt");
 															 }
-															 Node* ptr2 = &n;
 															 $$ = ptr2;}
 
 NDecVarOrNothing:

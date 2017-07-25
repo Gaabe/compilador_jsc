@@ -6,12 +6,13 @@ using namespace std;
 
 class Node {
 	public:
-   		char *value;
+   		const char *value;
    		list<Node*> childrenList;
 
-   		Node(string value);
+   		Node(const char* value);
    		void addChildren(Node *n);
-   		void importChildren(Node* n, char* name);
 };
+
+void importChildren(Node* mainNode, Node* nodeToImport, const char* name);
 
 void printTree(Node* n);

@@ -9,20 +9,19 @@ void Node::addChildren(Node *n){
 	this->childrenList.push_back(n);
 }
 
-void Node::importChildren(Node* n, char* name){
-	std::list<Node*>::const_iterator iterator = n->childrenList.begin();
-	do{
+void importChildren(Node* mainNode, Node* nodeToImport, const char* name){
+	std::list<Node*>::const_iterator iterator;
+	for (iterator = nodeToImport->childrenList.begin(); iterator !=  nodeToImport->childrenList.end(); ++iterator){
 		if((*iterator)->value != name){
-			this->addChildren(*iterator);
+			mainNode->addChildren(*iterator);
 		}else{
-			iterator = (*iterator)->childrenList.begin();
+			importChildren(mainNode, (*iterator), name);
 		}
-		++iterator;
-	}while((*iterator)->value != name || *iterator != n->childrenList.end() > 0)
+	}
 }
 
-Node::Node(string value){
-	value = value;
+Node::Node(const char* value){
+	this->value = value;
 }
 
 void printTree(Node* n){
