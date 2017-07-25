@@ -211,14 +211,23 @@ NStmtOrNothing:
 
 
 Stmt:
-	Assign T_SEMICOL  {Node n = Node("stmt");
-					   n.addChildren($1);
-					   Node* ptr = &n;
-					   $$ = ptr;
-					   }
-	|FuncCall T_SEMICOL														 {}
-	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing				 {}
-	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block 								 {}
+	Assign T_SEMICOL  {$$=$1;}
+	|FuncCall T_SEMICOL   {$$=$1;}
+	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing  {Node n = Node("if");
+															   n.addChildren($3);
+															   n.addChildren($5);
+															   if($6->value != "empty"){
+																  n.addChildren($6);
+															   }
+															   Node* ptr = &n;
+															   $$ = ptr;
+															   }
+	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block  {Node n = Node("while");
+											   n.addChildren($3);
+											   n.addChildren($5);
+											   Node* ptr = &n;
+											   $$ = ptr;
+											   }
 	|T_RETURN ExprOrNothing T_SEMICOL										 {}
 	|T_BREAK T_SEMICOL														 {}
 	|T_CONTINUE T_SEMICOL													 {}
