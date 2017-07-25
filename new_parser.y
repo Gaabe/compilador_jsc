@@ -239,7 +239,7 @@ Stmt:
 						   Node* ptr = &n;
 						   $$ = ptr;
 						   }
-	|T_CONTINUE T_SEMICOL {Node n = Node("break");
+	|T_CONTINUE T_SEMICOL {Node n = Node("continue");
 						   Node* ptr = &n;
 						   $$ = ptr;
 						   }
@@ -312,29 +312,62 @@ Expr:
 	Expr BinOp Expr 														 {}
 	|UnOp Expr 																 {}
 	|T_OPENPAR Expr T_CLOSEPAR 												 {}
-	|FuncCall 																 {}
-	|T_NUMBER 																 {}
-	|T_ID 																	 {}
+	|FuncCall 																 {$$=$1;}
+	|T_NUMBER 			{Node n = Node("$1");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	|T_ID 				{Node n = Node("$1");
+						   Node* ptr = &n;
+						   $$ = ptr;}
 ;
 
 BinOp:
-	T_PLUS																	 {}
-	| T_MINUS																 {}
-	| T_MUL 																 {}
-	| T_DIV  																 {}
-	| T_LT 																	 {}
-	| T_LTE 																 {}
-	| T_GT 																	 {} 
-	| T_GTE 																 {}
-	| T_EQUAL 																 {}
-	| T_NOTEQUAL 															 {}
-	| T_AND 																 {}
-	| T_OR 																	 {}
+	T_PLUS				{Node n = Node("+");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_MINUS			{Node n = Node("-");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_MUL 			{Node n = Node("*");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_DIV  			{Node n = Node("/");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_LT 				{Node n = Node("<");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_LTE 			{Node n = Node("<=");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_GT 				{Node n = Node(">");
+						   Node* ptr = &n;
+						   $$ = ptr;} 
+	| T_GTE 			{Node n = Node(">=");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_EQUAL 			{Node n = Node("==");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_NOTEQUAL 		{Node n = Node("!=");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_AND 			{Node n = Node("&");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_OR 				{Node n = Node("|");
+						   Node* ptr = &n;
+						   $$ = ptr;}
 ;
 
 UnOp:
-	T_MINUS 																 {}
-	| T_NOT 																 {}
+	T_MINUS 			{Node n = Node("-");
+						   Node* ptr = &n;
+						   $$ = ptr;}
+	| T_NOT 			{Node n = Node("!");
+						   Node* ptr = &n;
+						   $$ = ptr;
+						   }
 ;
 
 %%
