@@ -211,7 +211,11 @@ NStmtOrNothing:
 
 
 Stmt:
-	Assign T_SEMICOL														 {}
+	Assign T_SEMICOL  {Node n = Node("stmt");
+					   n.addChildren($1);
+					   Node* ptr = &n;
+					   $$ = ptr;
+					   }
 	|FuncCall T_SEMICOL														 {}
 	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing				 {}
 	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block 								 {}
