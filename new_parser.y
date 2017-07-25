@@ -228,41 +228,84 @@ Stmt:
 											   Node* ptr = &n;
 											   $$ = ptr;
 											   }
-	|T_RETURN ExprOrNothing T_SEMICOL										 {}
-	|T_BREAK T_SEMICOL														 {}
-	|T_CONTINUE T_SEMICOL													 {}
+	|T_RETURN ExprOrNothing T_SEMICOL {Node n = Node("return");
+									   if($2->value != "empty"){
+										  n.addChildren($2);
+									   }
+									   Node* ptr = &n;
+									   $$ = ptr;
+									   }
+	|T_BREAK T_SEMICOL	  {Node n = Node("break");
+						   Node* ptr = &n;
+						   $$ = ptr;
+						   }
+	|T_CONTINUE T_SEMICOL {Node n = Node("break");
+						   Node* ptr = &n;
+						   $$ = ptr;
+						   }
 ;
 
 ElseBlockOrNothing:
-	T_ELSE Block 															 {}
-	| %empty																 {}
+	T_ELSE Block {$$=$2;}
+	| %empty	{Node n = Node("empty");
+				 Node *ptr = &n;
+				 $$ = ptr;}
 ;
 
 ExprOrNothing:
-	Expr 																	 {}
-	| %empty 																 {}
+	Expr    {$$=$1;}
+	| %empty    {Node n = Node("empty");
+				 Node *ptr = &n;
+				 $$ = ptr;}
 ;
 
 Assign:
-	T_ID T_ASSIGN Expr 														 {}
+	T_ID T_ASSIGN Expr {Node n = Node("assign");
+						Node n2 = Node($1);
+						Node* ptr2 = &n2;
+						n.addChildren(ptr2);
+						n.addChildren($3);
+					    Node* ptr = &n;
+					    $$ = ptr;
+					    }
 ;
 
 FuncCall:
-	T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR								 {}
+	T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	 {Node n = Node("funccall");
+												  Node n2 = Node($1);
+												  Node* ptr2 = &n2;
+												  n.addChildren(ptr2);
+												  if($3->value != "empty"){
+												  	n.addChildren($3);
+												  }
+												  Node* ptr = &n;
+												  $$ = ptr;
+												  }
 ;
 
 ArgListOrNothing:
-	ArgList 																 {}
-	| %empty																 {}
+	ArgList 	{$$=$1;}
+	| %empty    {Node n = Node("empty");
+				 Node *ptr = &n;
+				 $$ = ptr;}
 ;
 
 ArgList:
-	Expr NCommaExprOrNothing 												 {}
+	Expr NCommaExprOrNothing 	 {Node n = Node("arglist");
+								  n.addChildren($1);
+								  if($2->value != "empty"){
+								  	n.addChildren($2);
+								  }
+								  Node* ptr = &n;
+								  $$ = ptr;
+								  }
 ;
 
 NCommaExprOrNothing:
 	NCommaExprOrNothing T_COMMA Expr 										 {}
-	| %empty	{}
+	| %empty    {Node n = Node("empty");
+				 Node *ptr = &n;
+				 $$ = ptr;}
 ;
 
 Expr:
