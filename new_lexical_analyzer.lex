@@ -1,4 +1,6 @@
 %{
+	#include <string>
+	#include "new_ast.hpp"
 	#include "new_parser.tab.h"
 	#define YY_DECL extern "C" int yylex()
 %}
@@ -40,8 +42,8 @@
 "break"					return T_BREAK;
 "continue"				return T_CONTINUE;				
 
-[a-zA-Z][a-zA-Z0-9_]*	return T_ID;
-[0-9]+					return T_NUMBER;
+[a-zA-Z][a-zA-Z0-9_]*	{yylval.sval = strdup(yytext); return T_ID;}
+[0-9]+					{yylval.ival = strdup(yytext); return T_NUMBER;}
 
 .						return T_ERROR;
 
