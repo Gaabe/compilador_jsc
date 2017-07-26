@@ -1,22 +1,21 @@
 #include <iostream>
-#include <list>
-#include <string>
-#include <stdio.h>
 #include <vector>
+#include <string>
+
+#ifndef _AST_H
+#define _AST_H
 
 using namespace std;
 
 class Node {
-	public:
-   		const char *value;
-   		vector<Node*> childrenList;
+  public:
+    const char* value;
+    vector<Node> *lista;
 
-   		Node(const char* value);
-   		void addChildren(Node *n);
+    Node(const char* value);
+    void add(Node n);
 };
 
-void importChildren(Node* mainNode, Node* nodeToImport, const char* name);
+void printTree(Node n);
 
-void importChildrenThenDeleteNode(Node* mainNode, Node* nodeToImport, const char* name);
-
-void printTree(Node* n);
+#endif
