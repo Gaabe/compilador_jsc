@@ -107,12 +107,12 @@ Program:
 ;
 
 DecVar:
-	T_LET T_ID AssignExprOrNothing T_SEMICOL	{Node n = Node("decvar");
-												Node* ptr = &n;
-												Node n2 = Node("teste");
-												Node* ptr2 = &n2;
-												addChild(ptr, ptr2);
-												$$=ptr;}
+	T_LET T_ID AssignExprOrNothing T_SEMICOL	{Node* principal = new Node("decvar");
+												// Node* ptr = &principal;
+												Node* id = new Node($2);
+												// Node* ptr2 = &id;
+												addChild(principal, id);
+												$$=principal;}
 ;
 
 AssignExprOrNothing:
@@ -121,12 +121,12 @@ AssignExprOrNothing:
 ;
 
 DecFunc:
-	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block    {Node n = Node("decfunc");
-																Node* ptr = &n;	
-																Node n2 = Node("teste");
-																Node* ptr2 = &n2;
-																addChild(ptr, ptr2);
-																$$=ptr;}
+	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block    {Node* principal = new Node("decfunc");
+																// Node* ptr = &principal;	
+																Node* id = new Node($2);
+																// Node* ptr2 = &id;
+																addChild(principal, id);
+																$$=principal;}
 ;
 
 ParamListOrNothing:
@@ -281,8 +281,8 @@ main(int argc, char *argv[]){
 
 	printf("---------\n");
 	// printTree(Proot);
-	printar(Proot);
-	// printTree(Proot);
+	// printar(Proot);
+	printTree(Proot);
 	// printf("%s\n", Proot->childrenList[0]->value);
 	// printf("%s\n", Proot->childrenList[1]->value);
 	// printf("%d\n", Proot->childrenList[0]->childrenList.size());
