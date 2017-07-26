@@ -309,10 +309,13 @@ NCommaExprOrNothing:
 ;
 
 Expr:
-	Expr BinOp Expr 														 {}
-	|UnOp Expr 																 {}
-	|T_OPENPAR Expr T_CLOSEPAR 												 {}
-	|FuncCall 																 {$$=$1;}
+	Expr BinOp Expr {$2->addChildren($1);
+					$2->addChildren($3);
+					$$=$2;}
+	|UnOp Expr {$1->addChildren($2);
+				$$=$1;}
+	|T_OPENPAR Expr T_CLOSEPAR {$$=$2;}
+	|FuncCall {$$=$1;}
 	|T_NUMBER 			{Node n = Node("$1");
 						   Node* ptr = &n;
 						   $$ = ptr;}
