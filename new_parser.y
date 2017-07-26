@@ -105,217 +105,188 @@ Program:
 ;
 
 DecVar:
-	T_LET T_ID AssignExprOrNothing T_SEMICOL	{Node n = Node("decvar");
-												 Node n2 = Node($2);
-											 	 Node *ptr = &n2;
-											 	 n.addChildren(ptr);
+	T_LET T_ID AssignExprOrNothing T_SEMICOL	{Node* n = new Node("decvar");
+												 Node* n2 = new Node($2);
+											 	 n->addChildren(n2);
 												 if($3->value != "empty"){
-												 	n.addChildren($3);
+												 	n->addChildren($3);
 												 }
-												 Node *ptr2 = &n;
-												 $$ = ptr2;
+												 $$ = n;
 												printf("decvar\n");}
 ;
 
 AssignExprOrNothing:
 	T_ASSIGN Expr    {$$=$2;}
-	| %empty	{Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 DecFunc:
-	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block    {Node n = Node("decfunc");
-																 Node n2 = Node($2);
-																 Node* ptr = &n2;
-																 n.addChildren(ptr);
-																 	n.addChildren($4);
-																 n.addChildren($6);
-																 Node* ptr2 = &n;
-																 $$ = ptr2;
+	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block    {Node* n = new Node("decfunc");
+																 Node* n2 = new Node($2);
+																 n->addChildren(n2);
+																 n->addChildren($4);
+																 n->addChildren($6);
+																 $$ = n;
 																 printf("decfunc\n");}
 ;
 
 ParamListOrNothing:
 	ParamList    {$$ = $1;}
-	| %empty	{Node n = Node("paramlist");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("paramlist");
+				 $$ = n;}
 ;
 
 
 
 
 ParamList:
-	T_ID NCommaIdOrNothing	{Node n = Node("paramlist");
-							 Node n2 = Node($1);
-							 Node* ptr = &n2;
-							 n.addChildren(ptr);
- 							 Node* ptr2 = &n;
+	T_ID NCommaIdOrNothing	{Node* n = new Node("paramlist");
+							 Node* n2 = new Node($1);
+							 n->addChildren(n2);
 							 if($2->value != "empty"){
-							 	//importChildrenThenDeleteNode(ptr2, $2, "paramlist");
-							 	n.addChildren($2);
+							 	//importChildrenThenDeletenew Node(n2, $2, "paramlist");
+							 	n->addChildren($2);
 							 }
-							 $$ = ptr2;
+							 $$ = n;
 							 printf("paramlist\n");}
 ;
 
 NCommaIdOrNothing:
-	NCommaIdOrNothing T_COMMA T_ID    {Node n = Node("paramlist");
+	NCommaIdOrNothing T_COMMA T_ID    {Node* n = new Node("paramlist");
 									   if($1->value != "empty"){
-										  n.addChildren($1);
+										  n->addChildren($1);
 									   }
-									   Node* ptr = &n;
-									   $$ = ptr;
+									   $$ = n;
 									   printf("paramlist\n");}
-	| %empty	{Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 Block:
-	T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL	{Node n = Node("block");
-															 Node* ptr2 = &n;
+	T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL	{Node* n = new Node("block");
 															 if($2->value != "empty"){
-															 	//importChildrenThenDeleteNode(ptr2, $2, "decvar");
-															 	n.addChildren($2);
+															 	//importChildrenThenDeletenew Node(n2, $2, "decvar");
+															 	n->addChildren($2);
 															 }
 															 if($3->value != "empty"){
-															 	//importChildrenThenDeleteNode(ptr2, $3, "stmt");
-															 	n.addChildren($3);
+															 	//importChildrenThenDeletenew Node(n2, $3, "stmt");
+															 	n->addChildren($3);
 															 }
-															 $$ = ptr2;
+															 $$ = n;
 															printf("decvar\n");}
 
 NDecVarOrNothing:
-	NDecVarOrNothing DecVar   {Node n = Node("decvar");
+	NDecVarOrNothing DecVar   {Node* n = new Node("decvar");
 							   if($1->value != "empty"){
-								  n.addChildren($1);
+								  n->addChildren($1);
 							   }
-							   Node* ptr = &n;
-							   $$ = ptr;
+							   $$ = n;
 							   printf("decvar\n");}
-	| %empty	{Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 NStmtOrNothing:
-	NStmtOrNothing Stmt	  {Node n = Node($2->value);
+	NStmtOrNothing Stmt	  {Node* n = new Node($2->value);
 						   if($1->value != "empty"){
-							  n.addChildren($1);
+							  n->addChildren($1);
 						   }
-						   Node* ptr = &n;
-						   $$ = ptr;
+						   $$ = n;
 						   printf("%s\n", $2->value);}
-	| %empty	{Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 
 Stmt:
 	Assign T_SEMICOL  {$$=$1;}
 	|FuncCall T_SEMICOL   {$$=$1;}
-	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing  {Node n = Node("if");
-															   n.addChildren($3);
-															   n.addChildren($5);
+	|T_IF T_OPENPAR Expr T_CLOSEPAR Block ElseBlockOrNothing  {Node* n = new Node("if");
+															   n->addChildren($3);
+															   n->addChildren($5);
 															   if($6->value != "empty"){
-																  n.addChildren($6);
+																  n->addChildren($6);
 															   }
-															   Node* ptr = &n;
-															   $$ = ptr;
+															   $$ = n;
 															   printf("if\n");}
-	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block  {Node n = Node("while");
-											   n.addChildren($3);
-											   n.addChildren($5);
-											   Node* ptr = &n;
-											   $$ = ptr;
+	|T_WHILE T_OPENPAR Expr T_CLOSEPAR Block  {Node* n = new Node("while");
+											   n->addChildren($3);
+											   n->addChildren($5);
+											   $$ = n;
 											   printf("while\n");}
-	|T_RETURN ExprOrNothing T_SEMICOL {Node n = Node("return");
+	|T_RETURN ExprOrNothing T_SEMICOL {Node* n = new Node("return");
 									   if($2->value != "empty"){
-										  n.addChildren($2);
-									   printf("return\n");}
-									   Node* ptr = &n;
-									   $$ = ptr;
+										  n->addChildren($2);
 									   }
-	|T_BREAK T_SEMICOL	  {Node n = Node("break");
-						   Node* ptr = &n;
-						   $$ = ptr;
+									   printf("return\n");
+									   $$ = n;
+									   }
+	|T_BREAK T_SEMICOL	  {Node* n = new Node("break");
+						   $$ = n;
 						   printf("break\n");}
-	|T_CONTINUE T_SEMICOL {Node n = Node("continue");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	|T_CONTINUE T_SEMICOL {Node* n = new Node("continue");
+						   $$ = n;
 						   printf("continue\n");}
 ;
 
 ElseBlockOrNothing:
 	T_ELSE Block {$$=$2;}
-	| %empty	{Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty	{Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 ExprOrNothing:
 	Expr    {$$=$1;}
-	| %empty    {Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty    {Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 Assign:
-	T_ID T_ASSIGN Expr {Node n = Node("assign");
-						Node n2 = Node($1);
-						Node* ptr2 = &n2;
-						n.addChildren(ptr2);
-						n.addChildren($3);
-					    Node* ptr = &n;
-					    $$ = ptr;
+	T_ID T_ASSIGN Expr {Node* n = new Node("assign");
+						Node* n2 = new Node($1);
+						n->addChildren(n2);
+						n->addChildren($3);
+					    $$ = n;
 					    printf("assign\n");}
 ;
 
 FuncCall:
-	T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	 {Node n = Node("funccall");
-												  Node n2 = Node($1);
-												  Node* ptr2 = &n2;
-												  n.addChildren(ptr2);
+	T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	 {Node* n = new Node("funccall");
+												  Node* n2 = new Node($1);
+												  n->addChildren(n2);
 												  if($3->value != "empty"){
-												  	n.addChildren($3);
+												  	n->addChildren($3);
 												  }
-												  Node* ptr = &n;
-												  $$ = ptr;
+												  $$ = n;
 												 printf("funccall\n");}
 ;
 
 ArgListOrNothing:
 	ArgList 	{$$=$1;}
-	| %empty    {Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty    {Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 ArgList:
-	Expr NCommaExprOrNothing 	 {Node n = Node("arglist");
-								  n.addChildren($1);
+	Expr NCommaExprOrNothing 	 {Node* n = new Node("arglist");
+								  n->addChildren($1);
 								  if($2->value != "empty"){
-								  	n.addChildren($2);
+								  	n->addChildren($2);
 								  }
-								  Node* ptr = &n;
-								  $$ = ptr;
+								  $$ = n;
 								  printf("arglist\n");}
 ;
 
 NCommaExprOrNothing:
-	NCommaExprOrNothing T_COMMA Expr {Node n = Node("ncommaexprornothing");
+	NCommaExprOrNothing T_COMMA Expr {Node* n = new Node("ncommaexprornothing");
 									   if($3->value != "empty"){
-										 n.addChildren($3);
+										 n->addChildren($3);
 									   }
-									   Node* ptr = &n;
-									   $$ = ptr;
+									   $$ = n;
 									   printf("%s\n", $3->value);}
-	| %empty    {Node n = Node("empty");
-				 Node *ptr = &n;
-				 $$ = ptr;}
+	| %empty    {Node* n = new Node("empty");
+				 $$ = n;}
 ;
 
 Expr:
@@ -326,75 +297,60 @@ Expr:
 				$$=$1;}
 	|T_OPENPAR Expr T_CLOSEPAR {$$=$2;}
 	|FuncCall {$$=$1;}
-	|T_NUMBER 			{Node n = Node($1);
-						   Node* ptr = &n;
-						   $$ = ptr;
+	|T_NUMBER 			{Node* n = new Node($1);
+						   $$ = n;
 						   printf("%s\n", $1);}
-	|T_ID 				{Node n = Node($1);
-						   Node* ptr = &n;
-						   $$ = ptr;
+	|T_ID 				{Node* n = new Node($1);
+						   $$ = n;
 						   printf("%s\n", $1);}
 ;
 
 BinOp:
-	T_PLUS				{Node n = Node("+");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	T_PLUS				{Node* n = new Node("+");
+						   $$ = n;
 							printf("+\n");}
-	| T_MINUS			{Node n = Node("-");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_MINUS			{Node* n = new Node("-");
+						   $$ = n;
 						   printf("-\n");}
-	| T_MUL 			{Node n = Node("*");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_MUL 			{Node* n = new Node("*");
+						   $$ = n;
 						   printf("*\n");}
-	| T_DIV  			{Node n = Node("/");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_DIV  			{Node* n = new Node("/");
+						   $$ = n;
 						   printf("/\n");}
-	| T_LT 				{Node n = Node("<");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_LT 				{Node* n = new Node("<");
+						   $$ = n;
 						   printf("<\n");}
-	| T_LTE 			{Node n = Node("<=");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_LTE 			{Node* n = new Node("<=");
+						   $$ = n;
 						   printf("<=\n");}
-	| T_GT 				{Node n = Node(">");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_GT 				{Node* n = new Node(">");
+						   $$ = n;
 						   printf(">\n");} 
-	| T_GTE 			{Node n = Node(">=");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_GTE 			{Node* n = new Node(">=");
+						   $$ = n;
 						   printf(">=\n");}
-	| T_EQUAL 			{Node n = Node("==");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_EQUAL 			{Node* n = new Node("==");
+						   $$ = n;
 						   printf("==\n");}
-	| T_NOTEQUAL 		{Node n = Node("!=");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_NOTEQUAL 		{Node* n = new Node("!=");
+						   $$ = n;
 						   printf("!=\n");}
-	| T_AND 			{Node n = Node("&");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_AND 			{Node* n = new Node("&");
+						   $$ = n;
 						   printf("&\n");}
-	| T_OR 				{Node n = Node("|");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_OR 				{Node* n = new Node("|");
+						   
+						   $$ = n;
 						   printf("|\n");}
 ;
 
 UnOp:
-	T_MINUS 			{Node n = Node("-");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	T_MINUS 			{Node* n = new Node("-");
+						   $$ = n;
 						   printf("-\n");}
-	| T_NOT 			{Node n = Node("!");
-						   Node* ptr = &n;
-						   $$ = ptr;
+	| T_NOT 			{Node* n = new Node("!");
+						   $$ = n;
 						   printf("!\n");}
 ;
 
@@ -407,8 +363,7 @@ void yyerror(const char *s) { printf("ERROR: %s", s); }
 main(int argc, char *argv[]){
 	yyin = fopen(argv[1], "r");
 	yyout = fopen(argv[2], "w");
-	Node root = Node("program");
-	Proot = &root;
+	Node* root = new Node("program");
 	printf("---------\n");
     do {
 		yyparse();
@@ -423,7 +378,7 @@ main(int argc, char *argv[]){
 	// Node n7 = Node("id");
 
 	// Node* ptr1 = &n1;
-	// Node* ptr2 = &n2;
+	// 
 	// Node* ptr3 = &n3;
 	// Node* ptr4 = &n4;
 	// Node* ptr5 = &n5;
@@ -438,7 +393,7 @@ main(int argc, char *argv[]){
 	// printTree(ptr1);
 
 	printf("---------\n");
-	printTree(Proot);
+	printTree(root);
 	// printf("%s", Proot->value);
 
 
