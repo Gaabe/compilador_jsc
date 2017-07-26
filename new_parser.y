@@ -12,7 +12,7 @@ using namespace std;
 
 void yyerror(const char *s);
 
-Node root = Node("program");
+Node* Proot;
 
 
 %}
@@ -99,8 +99,8 @@ Node root = Node("program");
 %%
 
 Program:
-	Program DecVar	{root.addChildren($2);}
-	| Program DecFunc	{root.addChildren($2);}
+	Program DecVar	{Proot->addChildren($2);}
+	| Program DecFunc	{Proot->addChildren($2);}
 	| %empty	{}
 ;
 
@@ -279,8 +279,7 @@ FuncCall:
 												  	n.addChildren($3);
 												  }
 												  Node* ptr = &n;
-												  $$ = ptr;
-												  }
+												  $$ = ptr;}
 ;
 
 ArgListOrNothing:
@@ -382,12 +381,37 @@ void yyerror(const char *s) { printf("ERROR: %s", s); }
 main(int argc, char *argv[]){
 	yyin = fopen(argv[1], "r");
 	yyout = fopen(argv[2], "w");
-	//root = Node("program");
-	Node *ptr = &root;
-	printTree(ptr);
+	Node root = Node("program");
+	Proot = &root;
     do {
 		yyparse();
 	} while (!feof(yyin));
+
+	Node n1 = Node("paramlist");
+	Node n2 = Node("id");
+	Node n3 = Node("ncomma");
+	Node n4 = Node("ncomma");
+	Node n5 = Node("id");
+	Node n6 = Node("ncomma");
+	Node n7 = Node("id");
+
+	Node* ptr1 = &n1;
+	Node* ptr2 = &n2;
+	Node* ptr3 = &n3;
+	Node* ptr4 = &n4;
+	Node* ptr5 = &n5;
+	Node* ptr6 = &n6;
+	Node* ptr7 = &n7;
+	n1.addChildren(ptr2);
+	n1.addChildren(ptr3);
+	n3.addChildren(ptr4);
+	n3.addChildren(ptr5);
+	n4.addChildren(ptr6);
+	n4.addChildren(ptr7);
+	printTree(ptr1);
+
+
+	//printTree(Proot);
 	fclose(yyin);
 	fclose(yyout);
 	return 0;
