@@ -43,7 +43,7 @@
 "continue"				return T_CONTINUE;				
 
 [a-zA-Z][a-zA-Z0-9_]*	{yylval.sval = strdup(yytext); return T_ID;}
-[0-9]+					{yylval.ival = strdup(yytext); return T_NUMBER;}
+[0-9]+					{yylval.sval = strdup(yytext); return T_NUMBER;}
 
 .						return T_ERROR;
 

@@ -37,6 +37,10 @@ Node::Node(const char* value){
 	this->value = value;
 }
 
+void addChild(Node* parent, Node* child){
+	parent->childrenList.push_back(child);
+}
+
 void printTree(Node* n){
 	if(n->value){
 		printf("[%s", n->value);

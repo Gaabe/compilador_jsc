@@ -57,7 +57,7 @@ Node* Proot;
 %token T_CONTINUE        
 
 %token <sval> T_ID
-%token <ival> T_NUMBER
+%token <sval> T_NUMBER
 
 %token T_ERROR
 
@@ -99,14 +99,19 @@ Node* Proot;
 %%
 
 Program:
-	Program DecVar	{Proot->addChildren($2);}
-	| Program DecFunc	{Proot->addChildren($2);}
+	Program DecVar	{//Proot->addChildren($2);
+					addChild(Proot, $2);}
+	| Program DecFunc	{//Proot->addChildren($2);
+						addChild(Proot, $2);}
 	| %empty	{}
 ;
 
 DecVar:
 	T_LET T_ID AssignExprOrNothing T_SEMICOL	{Node n = Node("decvar");
 												Node* ptr = &n;
+												Node n2 = Node("teste");
+												Node* ptr2 = &n2;
+												addChild(ptr, ptr2);
 												$$=ptr;}
 ;
 
@@ -117,7 +122,10 @@ AssignExprOrNothing:
 
 DecFunc:
 	T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block    {Node n = Node("decfunc");
-																Node* ptr = &n;
+																Node* ptr = &n;	
+																Node n2 = Node("teste");
+																Node* ptr2 = &n2;
+																addChild(ptr, ptr2);
 																$$=ptr;}
 ;
 
@@ -229,8 +237,14 @@ UnOp:
 void yyerror(const char *s) { printf("ERROR: %s", s); }
 
 void printar(Node* n){
-	printf("%s", n->value);
-	printf("%d", n->childrenList.size());
+	printf("%s\n", n->value);
+	printf("%s\n", n->childrenList[0]->value);
+	printf("%s\n", n->childrenList[1]->value);
+	printf("%d\n", n->childrenList[0]->childrenList.size());
+	printf("%s\n", n->childrenList[0]->childrenList[0]->value);
+	printf("%s\n", n->childrenList[0]->childrenList[1]->value);
+	printf("%s\n", n->childrenList[0]->childrenList[0]->childrenList[0]->value);
+	printf("%s\n", n->childrenList[0]->childrenList[0]->childrenList[1]->value);
 }
 
 main(int argc, char *argv[]){
@@ -267,8 +281,8 @@ main(int argc, char *argv[]){
 
 	printf("---------\n");
 	// printTree(Proot);
-	// printar(Proot);
-	printTree(Proot);
+	printar(Proot);
+	// printTree(Proot);
 	// printf("%s\n", Proot->childrenList[0]->value);
 	// printf("%s\n", Proot->childrenList[1]->value);
 	// printf("%d\n", Proot->childrenList[0]->childrenList.size());
