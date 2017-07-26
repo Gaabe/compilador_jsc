@@ -38,9 +38,13 @@ Node::Node(const char* value){
 }
 
 void printTree(Node* n){
-	printf("[%s", n->value);
-	for (int i = 0; i < n->childrenList.size(); i++) {
-    	printTree(n->childrenList[i]);
+	if(n->value){
+		printf("[%s", n->value);
+	}
+	if (n->childrenList.size()){
+		for (int i = 0; i < n->childrenList.size(); i++) {
+	    	printTree(n->childrenList[i]);
+		}
 	}	
 	printf("]");
 }
