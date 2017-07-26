@@ -103,9 +103,7 @@ DecVar:
   ;
 
 AssignExprOrNothing:
-  T_ASSIGN Expr    {Node *n = new Node("assign");
-										n->add(*($2));
-    								$$ = n;}
+  T_ASSIGN Expr    {$$ = $2;}
   | %empty {Node *n = new Node("empty");
     				$$ = n;}
   ;
