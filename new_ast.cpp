@@ -2,6 +2,8 @@
 #include <list>
 #include <string>
 #include "new_ast.hpp"
+#include <stdio.h>
+#include <vector>
 
 using namespace std;
 
@@ -10,19 +12,25 @@ void Node::addChildren(Node *n){
 }
 
 void importChildren(Node* mainNode, Node* nodeToImport, const char* name){
-	std::list<Node*>::const_iterator iterator;
-	for (iterator = nodeToImport->childrenList.begin(); iterator !=  nodeToImport->childrenList.end(); ++iterator){
-		if((*iterator)->value != name){
-			mainNode->addChildren(*iterator);
+	for (int i = 0; i < nodeToImport->childrenList.size(); i++){
+		if(nodeToImport->childrenList[i]->value != name){
+			mainNode->addChildren(nodeToImport->childrenList[i]);
 		}else{
-			importChildren(mainNode, (*iterator), name);
+			importChildren(mainNode, nodeToImport->childrenList[i], name);
 		}
 	}
 }
 
 void importChildrenThenDeleteNode(Node* mainNode, Node* nodeToImport, const char* name){
 	importChildren(mainNode, nodeToImport, name);
-	mainNode->childrenList.remove(nodeToImport);
+	for( std::vector<Node*>::iterator iter = (mainNode->childrenList).begin(); iter != (mainNode->childrenList).end(); ++iter )
+	{
+	    if( *iter == nodeToImport )
+	    {
+	        (mainNode->childrenList).erase( iter );
+	        break;
+	    }
+	}
 }
 
 Node::Node(const char* value){
@@ -31,9 +39,8 @@ Node::Node(const char* value){
 
 void printTree(Node* n){
 	printf("[%s", n->value);
-	std::list<Node*>::const_iterator iterator;
-	for (iterator = n->childrenList.begin(); iterator !=  n->childrenList.end(); ++iterator) {
-    	printTree((*iterator));
+	for (int i = 0; i < n->childrenList.size(); i++) {
+    	printTree(n->childrenList[i]);
 	}	
 	printf("]");
 }

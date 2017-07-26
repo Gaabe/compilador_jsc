@@ -129,9 +129,7 @@ DecFunc:
 																 Node n2 = Node($2);
 																 Node* ptr = &n2;
 																 n.addChildren(ptr);
-																 if($4->value != "empty"){
 																 	n.addChildren($4);
-																 }
 																 n.addChildren($6);
 																 Node* ptr2 = &n;
 																 $$ = ptr2;
@@ -140,7 +138,7 @@ DecFunc:
 
 ParamListOrNothing:
 	ParamList    {$$ = $1;}
-	| %empty	{Node n = Node("empty");
+	| %empty	{Node n = Node("paramlist");
 				 Node *ptr = &n;
 				 $$ = ptr;}
 ;
@@ -155,7 +153,8 @@ ParamList:
 							 n.addChildren(ptr);
  							 Node* ptr2 = &n;
 							 if($2->value != "empty"){
-							 	importChildrenThenDeleteNode(ptr2, $2, "paramlist");
+							 	//importChildrenThenDeleteNode(ptr2, $2, "paramlist");
+							 	n.addChildren($2);
 							 }
 							 $$ = ptr2;
 							 printf("paramlist\n");}
@@ -178,10 +177,12 @@ Block:
 	T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL	{Node n = Node("block");
 															 Node* ptr2 = &n;
 															 if($2->value != "empty"){
-															 	importChildrenThenDeleteNode(ptr2, $2, "decvar");
+															 	//importChildrenThenDeleteNode(ptr2, $2, "decvar");
+															 	n.addChildren($2);
 															 }
 															 if($3->value != "empty"){
-															 	importChildrenThenDeleteNode(ptr2, $3, "stmt");
+															 	//importChildrenThenDeleteNode(ptr2, $3, "stmt");
+															 	n.addChildren($3);
 															 }
 															 $$ = ptr2;
 															printf("decvar\n");}
@@ -305,7 +306,13 @@ ArgList:
 ;
 
 NCommaExprOrNothing:
-	NCommaExprOrNothing T_COMMA Expr 										 {}
+	NCommaExprOrNothing T_COMMA Expr {Node n = Node("ncommaexprornothing");
+									   if($3->value != "empty"){
+										 n.addChildren($3);
+									   }
+									   Node* ptr = &n;
+									   $$ = ptr;
+									   printf("%s\n", $3->value);}
 	| %empty    {Node n = Node("empty");
 				 Node *ptr = &n;
 				 $$ = ptr;}
@@ -402,6 +409,7 @@ main(int argc, char *argv[]){
 	yyout = fopen(argv[2], "w");
 	Node root = Node("program");
 	Proot = &root;
+	printf("---------\n");
     do {
 		yyparse();
 	} while (!feof(yyin));
@@ -429,10 +437,15 @@ main(int argc, char *argv[]){
 	// n4.addChildren(ptr7);
 	// printTree(ptr1);
 
-
+	printf("---------\n");
 	printTree(Proot);
+	// printf("%s", Proot->value);
+
+
+
 	fclose(yyin);
 	fclose(yyout);
+
 	return 0;
 }
 
