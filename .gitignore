@@ -4,3 +4,4 @@ test_input.jsc
 test_output.ast
 new_parser.tab.c
 new_parser.tab.h
+compilador.zip

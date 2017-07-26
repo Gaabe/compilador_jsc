@@ -15,34 +15,24 @@ Node::Node(const char* value) {
   this->lista = new vector<Node>();
 }
 
-void printTree(Node n) {
-  printf("[%s", n.value);
+void printTree(FILE* yyout, Node n) {
+  fprintf(yyout, "[%s", n.value);
   for (int i = 0; i <  int(n.lista->size()); i++) {
-    printTree(n.lista->at(i));
+    printTree(yyout, n.lista->at(i));
   }
-  printf("]");
-}
-
-void importChildrenID(Node parent, Node child, const char *value){
-	for (int i = 0; i <  int(child.lista->size()); i++) {
-		if(child.lista->at(i).value == value){
-			importChildren(parent, child.lista->at(i), value);
-			for (int j = 0; j <  int(parent.lista->size()); j++){
-				if(parent.lista->at(j).value == value){
-					parent.lista->erase(parent.lista->begin()+j);
-				}
-			}
-		}else{
-			parent.add(child.lista->at(i));
-		}
-  	}
+ fprintf(yyout, "]");
 }
 
 void importChildren(Node parent, Node child, const char *value){
 	for (int i = 0; i <  int(child.lista->size()); i++) {
-		if(child.lista->at(i).value == "removable"){
+		if(child.lista->at(i).value == value){
 			importChildren(parent, child.lista->at(i), value);
-		}else if(child.lista->at(i).value == value){
+			// for (int j = 0; j <  int(parent.lista->size()); j++){
+			// 	if(parent.lista->at(j).value == value){
+			// 		parent.lista->erase(parent.lista->begin()+j);
+			// 	}
+			// }
+		}else{
 			parent.add(child.lista->at(i));
 		}
   	}

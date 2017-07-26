@@ -121,7 +121,7 @@ DecFunc:
 
 ParamListOrNothing:
   ParamList {Node *n = new Node("paramlist");
-  			importChildrenID(*n, *($1), "many_id");
+  			importChildren(*n, *($1), "many_id");
   			$$ = n;}
   | %empty	{Node *n = new Node("paramlist");
 			$$ = n;}
@@ -145,8 +145,8 @@ NCommaIdOrNothing:
 
 Block:
   T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL 	{Node *n = new Node("block");
-									  						if(($2)->value != "empty") {importChildrenID(*n, *($2), "many_decvar");}
-									  						if(($3)->value != "empty") {importChildrenID(*n, *($3), "many_stmt");}
+									  						if(($2)->value != "empty") {importChildren(*n, *($2), "many_decvar");}
+									  						if(($3)->value != "empty") {importChildren(*n, *($3), "many_stmt");}
 															$$ = n;}
   ;
 
@@ -219,7 +219,7 @@ FuncCall:
 
 ArgListOrNothing:
   ArgList 	{Node *n = new Node("arglist");
-  			importChildrenID(*n, *($1), "many_args");
+  			importChildren(*n, *($1), "many_args");
 			$$ = n;}
   | %empty 	{Node *n = new Node("arglist");
     		$$ = n;}
@@ -301,14 +301,35 @@ int main(int argc, char *argv[]) {
    		yyparse();
   	} while (!feof(yyin));
 
-  	printTree(*root);
-	printf("\n");
+  	printTree(yyout, *root);;
 
 
 	if(argc > 1)
 		fclose(yyin);
 	if(argc > 2)
 		fclose(yyout);
+
+	// printf("teste\n");
+	// Node* n = new Node("block");
+	// Node* n2 = new Node("many_decvar");
+	// Node* n3 = new Node("many_decvar");
+	// Node* n4 = new Node("many_decvar");
+	// Node* n5 = new Node("decvar");
+	// Node* n6 = new Node("decvar");
+	// Node* n7 = new Node("decvar");
+
+	// n->add(*n2);
+	// n2->add(*n3);
+	// n2->add(*n5);
+	// n3->add(*n4);
+	// n3->add(*n6);
+	// n4->add(*n7);
+	// printTree(*n);
+	// printf("\n");
+	// importChildren(*n, *n2, "many_decvar");
+	// printTree(*n);
+	// printf("\n");
+
   return 0;
 }
 
