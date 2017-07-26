@@ -152,14 +152,16 @@ Block:
 
 NDecVarOrNothing:
   NDecVarOrNothing DecVar 	{Node *n = new Node("many_decvar");
+  							if(($1)->value != "empty") {n->add(*($1));}
   							n->add(*($2));
 					 		$$ = n;}
-  | %empty 	{Node *n = new Node("phony");
+  | %empty 	{Node *n = new Node("empty");
 			$$ = n;}
   ;
 
 NStmtOrNothing:
   NStmtOrNothing Stmt	{Node *n = new Node("many_stmt");
+  						if(($1)->value != "empty") {n->add(*($1));}
 						n->add(*($2));
 				 		$$ = n;}
   | %empty	{Node *n = new Node("empty");
@@ -208,7 +210,7 @@ Assign:
   ;
 
 FuncCall:
-  T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	{Node *n = new Node("phony");
+  T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	{Node *n = new Node("funccall");
 												Node *n_id = new Node($1);
 												n->add(*n_id);
 												n->add(*($3));
@@ -216,21 +218,26 @@ FuncCall:
   ;
 
 ArgListOrNothing:
-  ArgList 	{Node *n = new Node("phony");
+  ArgList 	{Node *n = new Node("arglist");
+  			importChildrenID(*n, *($1), "many_args");
 			$$ = n;}
   | %empty 	{Node *n = new Node("arglist");
     		$$ = n;}
   ;
 
 ArgList:
-  Expr NCommaExprOrNothing 	{Node *n = new Node("phony");
+  Expr NCommaExprOrNothing 	{Node *n = new Node("many_args");
+  							n->add(*($1));
+  							if(($2)->value != "empty") {n->add(*($2));}
 							$$ = n;}
   ;
 
 NCommaExprOrNothing:
-  NCommaExprOrNothing T_COMMA Expr 	{Node *n = new Node("phony");
+  NCommaExprOrNothing T_COMMA Expr 	{Node *n = new Node("many_args");
+  									if(($1)->value != "empty") {n->add(*($1));}
+  									n->add(*($3));
 									$$ = n;}
-  | %empty 	{Node *n = new Node("phony");
+  | %empty 	{Node *n = new Node("empty");
     		$$ = n;}
   ;
 

@@ -27,6 +27,11 @@ void importChildrenID(Node parent, Node child, const char *value){
 	for (int i = 0; i <  int(child.lista->size()); i++) {
 		if(child.lista->at(i).value == value){
 			importChildren(parent, child.lista->at(i), value);
+			for (int j = 0; j <  int(parent.lista->size()); j++){
+				if(parent.lista->at(j).value == value){
+					parent.lista->erase(parent.lista->begin()+j);
+				}
+			}
 		}else{
 			parent.add(child.lista->at(i));
 		}
