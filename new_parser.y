@@ -98,7 +98,7 @@ DecVar:
   T_LET T_ID AssignExprOrNothing T_SEMICOL {Node *n = new Node("decvar");
 																				    Node *n_id = new Node($2);
 																				    n->add(*n_id);
-																						if(($3)->value != "empty") {n->add(*($3));}
+																					if(($3)->value != "empty") {n->add(*($3));}
 																				    $$ = n;}
   ;
 
@@ -120,39 +120,49 @@ DecFunc:
   ;
 
 ParamListOrNothing:
-  ParamList {$$ = $1;}
+  ParamList {Node *n = new Node("paramlist");
+  			importChildrenID(*n, *($1), "many_id");
+  			$$ = n;}
   | %empty	{Node *n = new Node("paramlist");
 			$$ = n;}
   ;
 
 ParamList:
-  T_ID NCommaIdOrNothing 	{Node *n = new Node("phony");
+  T_ID NCommaIdOrNothing 	{Node *n = new Node("many_id");
+  							Node *n2 = new Node($1);
+  							n->add(*n2);
+  							if(($2)->value != "empty") {n->add(*($2));}
 							$$ = n;}
   ;
 
 NCommaIdOrNothing:
-  NCommaIdOrNothing T_COMMA T_ID 	{Node *n = new Node("phony");
+  NCommaIdOrNothing T_COMMA T_ID 	{Node *n = new Node($3);
+  									if(($1)->value != "empty") {n->add(*($1));}
 									$$ = n;}
-  | %empty 	{Node *n = new Node("phony");
+  | %empty 	{Node *n = new Node("empty");
 			$$ = n;}
   ;
 
 Block:
-  T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL 	{Node *n = new Node("phony");
+  T_OPENCURL NDecVarOrNothing NStmtOrNothing T_CLOSECURL 	{Node *n = new Node("block");
+									  						if(($2)->value != "empty") {importChildrenID(*n, *($2), "many_decvar");}
+									  						if(($3)->value != "empty") {importChildrenID(*n, *($3), "many_stmt");}
 															$$ = n;}
   ;
 
 NDecVarOrNothing:
-  NDecVarOrNothing DecVar 	{Node *n = new Node("phony");
+  NDecVarOrNothing DecVar 	{Node *n = new Node("many_decvar");
+  							n->add(*($2));
 					 		$$ = n;}
   | %empty 	{Node *n = new Node("phony");
 			$$ = n;}
   ;
 
 NStmtOrNothing:
-  NStmtOrNothing Stmt	{Node *n = new Node("phony");
-						$$ = n;}
-  | %empty	{Node *n = new Node("phony");
+  NStmtOrNothing Stmt	{Node *n = new Node("many_stmt");
+						n->add(*($2));
+				 		$$ = n;}
+  | %empty	{Node *n = new Node("empty");
 			$$ = n;}
   ;
 

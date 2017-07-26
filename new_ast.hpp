@@ -18,4 +18,7 @@ class Node {
 
 void printTree(Node n);
 
+void importChildren(Node parent, Node child, const char *value);
+void importChildrenID(Node parent, Node child, const char *value);
+
 #endif
