@@ -13,11 +13,13 @@ using namespace std;
 
 void yyerror(const char *s);
 bool isDeclared(vector<const char*> list, const char* name);
+int getArgNumber(const char* name, vector<int> argnumberlist, vector<const char*> list);
 
 Node* root;
 bool problema_semantico;
 vector<const char*> funcoes_declaradas;
 vector<const char*> variaveis_declaradas;
+vector<int> numero_argumentos_funcoes_declaradas;
 
 %}
 
@@ -124,6 +126,7 @@ DecFunc:
 																problema_semantico = true;
 															}
 															funcoes_declaradas.push_back($2);
+															numero_argumentos_funcoes_declaradas.push_back($4->lista->size());
 															n->add(*n_id);
 															n->add(*($4));
 															n->add(*($6));
@@ -223,6 +226,9 @@ Assign:
 FuncCall:
   T_ID T_OPENPAR ArgListOrNothing T_CLOSEPAR	{Node *n = new Node("funccall");
 												Node *n_id = new Node($1);
+												if($3->lista->size() != getArgNumber($1, numero_argumentos_funcoes_declaradas, funcoes_declaradas)){
+													problema_semantico = true;
+												}
 												n->add(*n_id);
 												n->add(*($3));
 												$$ = n;}
@@ -305,6 +311,7 @@ UnOp:
 int main(int argc, char *argv[]) {
 	problema_semantico = false;
 	funcoes_declaradas.push_back("print");
+	numero_argumentos_funcoes_declaradas.push_back(1);
 	if(argc > 1)
 		yyin = fopen(argv[1], "r");
 	if(argc > 2)
@@ -314,9 +321,14 @@ int main(int argc, char *argv[]) {
    		yyparse();
   	} while (!feof(yyin));
 
+	if (!isDeclared(funcoes_declaradas, "main")){
+		problema_semantico = true;
+	}
+	
 	if(!problema_semantico){
   		printTree(yyout, *root);
 	}
+
 
 
 	if(argc > 1)
@@ -354,6 +366,14 @@ bool isDeclared(vector<const char*> list, const char* name){
 		}
 	}
 	return false;
+}
+
+int getArgNumber(const char* name, vector<int> argnumberlist, vector<const char*> list){
+	for (int i = 0; i <  int(list.size()); i++){
+		if(strcmp(list.at(i), name) == 0){
+			return argnumberlist.at(i);
+		}
+	}
 }
 
 void yyerror(const char *s) { printf("ERROR: %s\n", s); exit(2); }
