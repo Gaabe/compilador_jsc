@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+#include <string.h> 
 #include "new_ast.hpp"
 extern "C" int yylex();
 extern "C" int yyparse();
@@ -11,8 +12,12 @@ extern "C" FILE *yyout;
 using namespace std;
 
 void yyerror(const char *s);
+bool isDeclared(vector<const char*> list, const char* name);
 
 Node* root;
+bool problema_semantico;
+vector<const char*> funcoes_declaradas;
+vector<const char*> variaveis_declaradas;
 
 %}
 
@@ -96,10 +101,10 @@ Program:
 
 DecVar:
   T_LET T_ID AssignExprOrNothing T_SEMICOL {Node *n = new Node("decvar");
-																				    Node *n_id = new Node($2);
-																				    n->add(*n_id);
-																					if(($3)->value != "empty") {n->add(*($3));}
-																				    $$ = n;}
+										    Node *n_id = new Node($2);
+										    n->add(*n_id);
+											if(($3)->value != "empty") {n->add(*($3));}
+										    $$ = n;}
   ;
 
 AssignExprOrNothing:
@@ -111,6 +116,9 @@ AssignExprOrNothing:
 DecFunc:
   T_DEF T_ID T_OPENPAR ParamListOrNothing T_CLOSEPAR Block {Node *n = new Node("decfunc");
 															Node *n_id = new Node($2);
+															if(isDeclared(funcoes_declaradas, $2)){
+																problema_semantico = true;
+															}
 															n->add(*n_id);
 															n->add(*($4));
 															n->add(*($6));
@@ -244,7 +252,7 @@ Expr:
 					($2)->add(*($3));
 					$$ = $2;}
   | UnOp Expr 	{($1)->add(*($2));
-				$$ = $2;}
+				$$ = $1;}
   | T_OPENPAR Expr T_CLOSEPAR {$$ = $2;}
   | FuncCall {$$ = $1;}
   | T_NUMBER 	{Node *n = new Node($1);
@@ -290,6 +298,8 @@ UnOp:
 %%
 
 int main(int argc, char *argv[]) {
+	problema_semantico = false;
+	funcoes_declaradas.push_back("print");
 	if(argc > 1)
 		yyin = fopen(argv[1], "r");
 	if(argc > 2)
@@ -299,7 +309,9 @@ int main(int argc, char *argv[]) {
    		yyparse();
   	} while (!feof(yyin));
 
-  	printTree(yyout, *root);;
+	if(!problema_semantico){
+  		printTree(yyout, *root);
+	}
 
 
 	if(argc > 1)
@@ -329,6 +341,14 @@ int main(int argc, char *argv[]) {
 	// printf("\n");
 
   return 0;
+}
+bool isDeclared(vector<const char*> list, const char* name){
+	for (int i = 0; i <  int(list.size()); i++){
+		if(strcmp(list.at(i), name) == 0){
+			return true;
+		}
+	}
+	return false;
 }
 
 void yyerror(const char *s) { printf("ERROR: %s\n", s); exit(2); }
