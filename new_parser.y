@@ -102,6 +102,10 @@ Program:
 DecVar:
   T_LET T_ID AssignExprOrNothing T_SEMICOL {Node *n = new Node("decvar");
 										    Node *n_id = new Node($2);
+										    if(isDeclared(variaveis_declaradas, $2)){
+												problema_semantico = true;
+											}
+											variaveis_declaradas.push_back($2);
 										    n->add(*n_id);
 											if(($3)->value != "empty") {n->add(*($3));}
 										    $$ = n;}
@@ -119,6 +123,7 @@ DecFunc:
 															if(isDeclared(funcoes_declaradas, $2)){
 																problema_semantico = true;
 															}
+															funcoes_declaradas.push_back($2);
 															n->add(*n_id);
 															n->add(*($4));
 															n->add(*($6));
