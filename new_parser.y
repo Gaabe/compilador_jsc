@@ -84,14 +84,16 @@ vector<int> numero_argumentos_funcoes_declaradas;
 %type <node> ArgList
 %type <node> NCommaExprOrNothing
 %type <node> Expr
-%type <node> BinOp
-%type <node> UnOp
+%type <node> Term
+%type <node> Factor
 
 
 %left T_LT T_GT T_LTE T_GTE T_EQUAL T_NOTEQUAL T_AND T_OR
 %left  T_PLUS T_MINUS
 %left  T_MUL T_DIV
 %left  T_NOT
+%left  op1
+
 
 %%
 
@@ -104,10 +106,11 @@ Program:
 DecVar:
   T_LET T_ID AssignExprOrNothing T_SEMICOL {Node *n = new Node("decvar");
 										    Node *n_id = new Node($2);
-										    if(isDeclared(variaveis_declaradas, $2)){
-												problema_semantico = true;
-											}
-											variaveis_declaradas.push_back($2);
+											//if(isDeclared(variaveis_declaradas, $2)){
+											// 	problema_semantico = true;
+											// }else{
+											// 	variaveis_declaradas.push_back($2);
+											// }
 										    n->add(*n_id);
 											if(($3)->value != "empty") {n->add(*($3));}
 										    $$ = n;}
@@ -124,8 +127,9 @@ DecFunc:
 															Node *n_id = new Node($2);
 															if(isDeclared(funcoes_declaradas, $2)){
 																problema_semantico = true;
+															}else{
+																funcoes_declaradas.push_back($2);
 															}
-															funcoes_declaradas.push_back($2);
 															numero_argumentos_funcoes_declaradas.push_back($4->lista->size());
 															n->add(*n_id);
 															n->add(*($4));
@@ -150,8 +154,10 @@ ParamList:
   ;
 
 NCommaIdOrNothing:
-  NCommaIdOrNothing T_COMMA T_ID 	{Node *n = new Node($3);
+  NCommaIdOrNothing T_COMMA T_ID 	{Node *n = new Node("many_id");
+  									Node *n2 = new Node($3);
   									if(($1)->value != "empty") {n->add(*($1));}
+  									n->add(*n2);
 									$$ = n;}
   | %empty 	{Node *n = new Node("empty");
 			$$ = n;}
@@ -258,55 +264,41 @@ NCommaExprOrNothing:
     		$$ = n;}
   ;
 
-Expr:
-  Expr BinOp Expr 	{($2)->add(*($1));
-					($2)->add(*($3));
-					$$ = $2;}
-  | UnOp Expr 	{($1)->add(*($2));
-				$$ = $1;}
-  | T_OPENPAR Expr T_CLOSEPAR {$$ = $2;}
-  | FuncCall {$$ = $1;}
-  | T_NUMBER 	{Node *n = new Node($1);
-    			$$ = n;}
-  | T_ID 	{Node *n = new Node($1);
-		  	$$ = n;}
-  ;
+Expr: Expr T_PLUS Term		{Node *n = new Node("+");
+							n->add(*($1));
+							n->add(*($3));
+							$$ = n;}
+     | Expr T_MINUS Term	{Node *n = new Node("-");
+							n->add(*($1));
+							n->add(*($3));
+							$$ = n;}
+     | Term		{$$=$1;}
+     ;
 
-BinOp:
-  T_PLUS 	{Node *n = new Node("+");
-			$$ = n;}
-  | T_MINUS {Node *n = new Node("-");
-			$$ = n;}
-  | T_MUL 	{Node *n = new Node("*");
-			$$ = n;}
-  | T_DIV 	{Node *n = new Node("/");
-		 	$$ = n;}
-  | T_LT 	{Node *n = new Node("<");
-			$$ = n;}
-  | T_LTE 	{Node *n = new Node("<=");
-			$$ = n;}
-  | T_GT 	{Node *n = new Node(">");
-    		$$ = n;}
-  | T_GTE 	{Node *n = new Node(">=");
-    		$$ = n;}
-  | T_EQUAL {Node *n = new Node("==");
-			$$ = n;}
-  | T_NOTEQUAL 	{Node *n = new Node("!=");
-				$$ = n;}
-  | T_AND 	{Node *n = new Node("&&");
-			$$ = n;}
-  | T_OR 	{Node *n = new Node("||");
-    		$$ = n;}
-  ;
+Term: Term T_MUL Factor	{Node *n = new Node("*");
+							n->add(*($1));
+							n->add(*($3));
+							$$ = n;}
+     | Term T_DIV Factor	{Node *n = new Node("/");
+							n->add(*($1));
+							n->add(*($3));
+							$$ = n;}
+     | Factor	{$$=$1;}
+     ;
 
-UnOp:
-  T_MINUS 	{Node *n = new Node("-");
-			$$ = n;}
-  | T_NOT 	{Node *n = new Node("!");
-			$$ = n;}
-  ;
+Factor: T_OPENPAR Expr T_CLOSEPAR	{$$=$2;}
+       | T_MINUS Factor		{Node *n = new Node("-");
+							n->add(*($2));
+							$$ = n;}
+       | T_NUMBER			{Node *n = new Node($1);
+    						$$ = n;}
+       | T_ID 				{Node *n = new Node($1);
+		  					$$ = n;}
+		| FuncCall {$$ = $1;}
+       ;
 
 %%
+
 
 int main(int argc, char *argv[]) {
 	problema_semantico = false;
@@ -324,38 +316,15 @@ int main(int argc, char *argv[]) {
 	if (!isDeclared(funcoes_declaradas, "main")){
 		problema_semantico = true;
 	}
-	
+
 	if(!problema_semantico){
   		printTree(yyout, *root);
 	}
-
-
 
 	if(argc > 1)
 		fclose(yyin);
 	if(argc > 2)
 		fclose(yyout);
-
-	// printf("teste\n");
-	// Node* n = new Node("block");
-	// Node* n2 = new Node("many_decvar");
-	// Node* n3 = new Node("many_decvar");
-	// Node* n4 = new Node("many_decvar");
-	// Node* n5 = new Node("decvar");
-	// Node* n6 = new Node("decvar");
-	// Node* n7 = new Node("decvar");
-
-	// n->add(*n2);
-	// n2->add(*n3);
-	// n2->add(*n5);
-	// n3->add(*n4);
-	// n3->add(*n6);
-	// n4->add(*n7);
-	// printTree(*n);
-	// printf("\n");
-	// importChildren(*n, *n2, "many_decvar");
-	// printTree(*n);
-	// printf("\n");
 
   return 0;
 }

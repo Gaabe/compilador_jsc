@@ -1,0 +1,1 @@
+[program[decfunc[erro][paramlist[a][b][c]][block[return[-[1]]]]][decfunc[main][paramlist][block[funccall[erro][arglist[1][2][3]]][return[+[2][*[3][4]]]]]]]
