@@ -87,6 +87,9 @@ vector<int> numero_argumentos_funcoes_declaradas;
 %type <node> Term
 %type <node> Factor
 %type <node> AritExpr
+%type <node> HigherExpr
+%type <node> EvenHigherExpr
+%type <node> ABitHigherExpr
 
 
 %left T_LT T_GT T_LTE T_GTE T_EQUAL T_NOTEQUAL T_AND T_OR
@@ -277,40 +280,55 @@ AritExpr: AritExpr T_PLUS Term		{Node *n = new Node("+");
      ;
 
 Expr: 
-  Expr T_LT AritExpr {Node *n = new Node("<");
-  					n->add(*($1));
-  					n->add(*($3));
-      $$ = n;}
-    | Expr T_LTE AritExpr  {Node *n = new Node("<=");
-  					n->add(*($1));
-  					n->add(*($3));
-      $$ = n;}
-    | Expr T_GT AritExpr   {Node *n = new Node(">");
+     Expr T_OR ABitHigherExpr   {Node *n = new Node("||");
   					n->add(*($1));
   					n->add(*($3));
         $$ = n;}
-    | Expr T_GTE AritExpr  {Node *n = new Node(">=");
-  					n->add(*($1));
-  					n->add(*($3));
-        $$ = n;}
-    | Expr T_EQUAL AritExpr {Node *n = new Node("==");
-  					n->add(*($1));
-  					n->add(*($3));
-      $$ = n;}
-    | Expr T_NOTEQUAL AritExpr   {Node *n = new Node("!=");
-  					n->add(*($1));
-  					n->add(*($3));
-        $$ = n;}
-    | Expr T_AND AritExpr  {Node *n = new Node("&&");
+    | ABitHigherExpr		{$$=$1;}
+    ;
+
+ABitHigherExpr:
+	ABitHigherExpr T_AND HigherExpr  {Node *n = new Node("&&");
   					n->add(*($1));
   					n->add(*($3));
       $$ = n;}
-    | Expr T_OR AritExpr   {Node *n = new Node("||");
+    | HigherExpr		{$$=$1;}
+    ;
+
+
+HigherExpr:
+     HigherExpr T_EQUAL EvenHigherExpr {Node *n = new Node("==");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | HigherExpr T_NOTEQUAL EvenHigherExpr   {Node *n = new Node("!=");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | EvenHigherExpr		{$$=$1;}
+    ;
+
+EvenHigherExpr:
+	EvenHigherExpr T_LT AritExpr {Node *n = new Node("<");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | EvenHigherExpr T_LTE AritExpr  {Node *n = new Node("<=");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | EvenHigherExpr T_GT AritExpr   {Node *n = new Node(">");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | EvenHigherExpr T_GTE AritExpr  {Node *n = new Node(">=");
   					n->add(*($1));
   					n->add(*($3));
         $$ = n;}
     | AritExpr		{$$=$1;}
     ;
+
+
 
 Term: Term T_MUL Factor	{Node *n = new Node("*");
 							n->add(*($1));
