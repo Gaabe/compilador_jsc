@@ -86,6 +86,7 @@ vector<int> numero_argumentos_funcoes_declaradas;
 %type <node> Expr
 %type <node> Term
 %type <node> Factor
+%type <node> AritExpr
 
 
 %left T_LT T_GT T_LTE T_GTE T_EQUAL T_NOTEQUAL T_AND T_OR
@@ -264,16 +265,52 @@ NCommaExprOrNothing:
     		$$ = n;}
   ;
 
-Expr: Expr T_PLUS Term		{Node *n = new Node("+");
+AritExpr: AritExpr T_PLUS Term		{Node *n = new Node("+");
 							n->add(*($1));
 							n->add(*($3));
 							$$ = n;}
-     | Expr T_MINUS Term	{Node *n = new Node("-");
+     | AritExpr T_MINUS Term	{Node *n = new Node("-");
 							n->add(*($1));
 							n->add(*($3));
 							$$ = n;}
      | Term		{$$=$1;}
      ;
+
+Expr: 
+  Expr T_LT AritExpr {Node *n = new Node("<");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | Expr T_LTE AritExpr  {Node *n = new Node("<=");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | Expr T_GT AritExpr   {Node *n = new Node(">");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | Expr T_GTE AritExpr  {Node *n = new Node(">=");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | Expr T_EQUAL AritExpr {Node *n = new Node("==");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | Expr T_NOTEQUAL AritExpr   {Node *n = new Node("!=");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | Expr T_AND AritExpr  {Node *n = new Node("&&");
+  					n->add(*($1));
+  					n->add(*($3));
+      $$ = n;}
+    | Expr T_OR AritExpr   {Node *n = new Node("||");
+  					n->add(*($1));
+  					n->add(*($3));
+        $$ = n;}
+    | AritExpr		{$$=$1;}
+    ;
 
 Term: Term T_MUL Factor	{Node *n = new Node("*");
 							n->add(*($1));
@@ -288,6 +325,9 @@ Term: Term T_MUL Factor	{Node *n = new Node("*");
 
 Factor: T_OPENPAR Expr T_CLOSEPAR	{$$=$2;}
        | T_MINUS Factor		{Node *n = new Node("-");
+							n->add(*($2));
+							$$ = n;}
+       | T_NOT Factor		{Node *n = new Node("!");
 							n->add(*($2));
 							$$ = n;}
        | T_NUMBER			{Node *n = new Node($1);
