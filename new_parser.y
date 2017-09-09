@@ -361,36 +361,36 @@ Factor: T_OPENPAR Expr T_CLOSEPAR	{$$=$2;}
 int gerarCodigo(char *file) {
 
     
-    struct nodo* raiz = (nodo*) calloc (1, sizeof(struct nodo));
+    struct Node2* raiz = (Node2*) calloc (1, sizeof(struct Node2));
     
     int tarvore;
     
-    if ((saida=fopen(file,"r"))==NULL){
+    if ((out=fopen(file,"r"))==NULL){
         fprintf(stderr, "Arquivo não pode ser aberto\n");
         exit(1);  
     }
         
-    fseek(saida, 0, SEEK_END);
-    tarvore=ftell(saida);
-    fseek(saida, 0, SEEK_SET);
+    fseek(out, 0, SEEK_END);
+    tarvore=ftell(out);
+    fseek(out, 0, SEEK_SET);
                 
     char* arvore = (char*)calloc(tarvore+1, sizeof(char));
-    fread(arvore, 1, tarvore, saida);
+    fread(arvore, 1, tarvore, out);
 
-    fclose(saida);
+    fclose(out);
     
-    posicao = 0;
+    position = 0;
         
-    gerarEstrutura (arvore, &raiz);
-    corrigirArvore(&raiz);
+    genStruct (arvore, &raiz);
+    fixTree(&raiz);
         
-    if ((saida=fopen(file,"w"))==NULL){
+    if ((out=fopen(file,"w"))==NULL){
          fprintf(stderr, "Arquivo não pode ser aberto\n");
          exit(1);  
     }   
     
-    geradorFuncao(raiz);
-    fclose(saida);  
+    genFunc(raiz);
+    fclose(out);  
 
     return 0;
 }

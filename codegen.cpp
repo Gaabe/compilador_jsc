@@ -2,22 +2,22 @@
 #include <stdio.h>
 #include <string.h>
 
-#define Nos 100
+#define maxNodes 100
 
-int posicao;
-int rotulo = 0;
-FILE *saida;
-int sairloop = -1;
+int position;
+int label = 0;
+FILE *out;
+int leaveloop = -1;
 
-struct nodo{
+struct Node2{
     char* elemento;
-    struct nodo *operando[Nos];
+    struct Node2 *operands[maxNodes];
 };
 
-struct nodo* parametros;
-int geral = 0;
+struct Node2* params;
+int global_var = 0;
 
-static const char *bloco[] = {
+static const char *block[] = {
     "decvar",
     "assign",
     "funccall",
@@ -28,7 +28,7 @@ static const char *bloco[] = {
     "continue",
 };
 
-static const char *operadores[] = {
+static const char *operators[] = {
     "+",
     "-",
     "*",
@@ -44,54 +44,54 @@ static const char *operadores[] = {
     "!",
 };
 
-void tratarBloco (struct nodo* raiz);
-void tratarFunccall (struct nodo* raiz);
+void genBlock (struct Node2* raiz);
+void genFuncCall (struct Node2* raiz);
 
-void gerarEstrutura (char* arvore, struct nodo** raiz) {
+void genStruct (char* arvore, struct Node2** raiz) {
     
-    struct nodo* p = (*raiz);
+    struct Node2* p = (*raiz);
     
-    int comeco = 0;
-    int indice = 0;
-    char palavra[200];
-    strcpy(palavra, "\0");
+    int start = 0;
+    int x = 0;
+    char word[250];
+    strcpy(word, "\0");
     char aux[2];
     aux[1] = '\0';
         
     while (1) {
-        if (arvore[posicao] == '['){
-            if (comeco){
-                p->operando[indice] = (nodo*) calloc (1, sizeof(struct nodo));
-                gerarEstrutura(arvore, &p->operando[indice]);
-                indice++;
+        if (arvore[position] == '['){
+            if (start){
+                p->operands[x] = (Node2*) calloc (1, sizeof(struct Node2));
+                genStruct(arvore, &p->operands[x]);
+                x++;
             }
             else {
-                comeco = 1;
-                posicao++;
+                start = 1;
+                position++;
             }
         }
-        else if (arvore[posicao] == ']'){
-            posicao++;
-            p->elemento = strdup(palavra);
+        else if (arvore[position] == ']'){
+            position++;
+            p->elemento = strdup(word);
             return;
         }
-        else if (arvore[posicao] == ' ' || arvore[posicao] == '\t' || arvore[posicao] == '\n' || arvore[posicao] == '\v' || arvore[posicao] == '\f' || arvore[posicao] == '\r')
-            posicao++;
+        else if (arvore[position] == ' ' || arvore[position] == '\t' || arvore[position] == '\n' || arvore[position] == '\v' || arvore[position] == '\f' || arvore[position] == '\r')
+            position++;
         else {
-            aux[0] = arvore[posicao];
-            strcat(palavra, aux);       
-            posicao++;
+            aux[0] = arvore[position];
+            strcat(word, aux);       
+            position++;
         }
     }
     
 }
 
-void renomear (struct nodo** raiz, int nivel, char* elementoOriginal, char* elementoSubstituto){
+void rename (struct Node2** raiz, int nivel, char* elementoOriginal, char* elementoSubstituto){
     
-    struct nodo* p = (*raiz);
+    struct Node2* p = (*raiz);
     
-    while (p->operando[nivel]!=NULL) {
-        renomear(&p->operando[nivel], 0, elementoOriginal, elementoSubstituto);
+    while (p->operands[nivel]!=NULL) {
+        rename(&p->operands[nivel], 0, elementoOriginal, elementoSubstituto);
         nivel ++;
     }
     
@@ -100,9 +100,9 @@ void renomear (struct nodo** raiz, int nivel, char* elementoOriginal, char* elem
     
 }
 
-void corrigirArvore (struct nodo** raiz) {
+void fixTree (struct Node2** raiz) {
     
-    struct nodo* p = (*raiz);
+    struct Node2* p = (*raiz);
     
     if (p == NULL)
         return;
@@ -112,45 +112,45 @@ void corrigirArvore (struct nodo** raiz) {
     char numVariavel[100];
     char nomeVariavel[101];
     
-    while (p->operando[i] != NULL) {
+    while (p->operands[i] != NULL) {
         i++;
     }
     
     for (j = i-1; j >= 0; j--) {
-        corrigirArvore(&p->operando[j]);
+        fixTree(&p->operands[j]);
     }
     
     j = 0;
     
     if (!strcmp(p->elemento, "block")){
-        while(p->operando[j] != NULL){
-            while (p->operando[j] != NULL) {
-                if (!strcmp(p->operando[j]->elemento, "decvar"))
+        while(p->operands[j] != NULL){
+            while (p->operands[j] != NULL) {
+                if (!strcmp(p->operands[j]->elemento, "decvar"))
                     break;
                 j++;
             }
-            if (p->operando[j] != NULL) {
+            if (p->operands[j] != NULL) {
                 nomeVariavel[0] = '_';
                 nomeVariavel[1] = 'a';
                 nomeVariavel[2] = '\0';
-                sprintf(numVariavel,"%d",geral);
+                sprintf(numVariavel,"%d",global_var);
                 strcat(nomeVariavel, numVariavel);
-                renomear(&p, j,p->operando[j]->operando[0]->elemento,nomeVariavel); 
-                geral++;
+                rename(&p, j,p->operands[j]->operands[0]->elemento,nomeVariavel); 
+                global_var++;
                 j++;
             }
         }
     }
     else if (!strcmp(p->elemento, "decfunc")){
         
-        while (p->operando[1]->operando[j] != NULL) {
+        while (p->operands[1]->operands[j] != NULL) {
             nomeVariavel[0] = '_';
             nomeVariavel[1] = 'a';
             nomeVariavel[2] = '\0';
-            sprintf(numVariavel,"%d",geral);
+            sprintf(numVariavel,"%d",global_var);
             strcat(nomeVariavel, numVariavel);
-            renomear(&p, 1, p->operando[1]->operando[j]->elemento,nomeVariavel);
-            geral++;
+            rename(&p, 1, p->operands[1]->operands[j]->elemento,nomeVariavel);
+            global_var++;
             j++;
         }
     }
@@ -159,7 +159,7 @@ void corrigirArvore (struct nodo** raiz) {
     
 }
 
-void procurarDeclaracoes(struct nodo* raiz){
+void findDecs(struct Node2* raiz){
     
     if (raiz == NULL)
         return;
@@ -167,12 +167,12 @@ void procurarDeclaracoes(struct nodo* raiz){
     int i = 0;
     
     if (!strcmp(raiz->elemento, "decvar")){
-        fprintf(saida, "\t%s:       .word   0\n", raiz->operando[0]->elemento); 
+        fprintf(out, "\t%s:       .word   0\n", raiz->operands[0]->elemento); 
         
     }
     else {
-        while (raiz->operando[i] != NULL) {
-            procurarDeclaracoes(raiz->operando[i]);
+        while (raiz->operands[i] != NULL) {
+            findDecs(raiz->operands[i]);
             i++;
         }   
     }
@@ -180,12 +180,12 @@ void procurarDeclaracoes(struct nodo* raiz){
     return;
 }
 
-void tratarExp (struct nodo* raiz){
+void genExp (struct Node2* raiz){
     
     int i;
     
     for (i = 0; i < 13 ; i++){
-        if (!strcmp(raiz->elemento, operadores[i])){
+        if (!strcmp(raiz->elemento, operators[i])){
           break;
         }
     }
@@ -194,320 +194,320 @@ void tratarExp (struct nodo* raiz){
             
             case 0:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\taddu $a0, $t0, $t1\n");
+                fprintf(out, "\taddu $a0, $t0, $t1\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 break;
 
             case 1:
             
-                tratarExp (raiz->operando[0]);
-                if (raiz->operando[1] != NULL){
+                genExp (raiz->operands[0]);
+                if (raiz->operands[1] != NULL){
                 
-                    tratarExp (raiz->operando[1]);
+                    genExp (raiz->operands[1]);
                     
-                    fprintf(saida, "\tlw $t1, 4($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                    fprintf(out, "\tlw $t1, 4($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, 4\n");
                     
-                    fprintf(saida, "\tlw $t0, 4($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                    fprintf(out, "\tlw $t0, 4($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, 4\n");
                     
-                    fprintf(saida, "\tsubu $a0, $t0, $t1\n");
+                    fprintf(out, "\tsubu $a0, $t0, $t1\n");
                     
-                    fprintf(saida, "\tsw $a0, 0($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                    fprintf(out, "\tsw $a0, 0($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 }
                 else {
                     
-                    fprintf(saida, "\tlw $t0, 4($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                    fprintf(out, "\tlw $t0, 4($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, 4\n");
                     
-                    fprintf(saida, "\tnegu $a0, $t0\n");
+                    fprintf(out, "\tnegu $a0, $t0\n");
                     
-                    fprintf(saida, "\tsw $a0, 0($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                    fprintf(out, "\tsw $a0, 0($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, -4\n");
                 }
                 
                 break;
 
             case 2:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tmult $t0, $t1\n");
-                fprintf(saida, "\tmflo $a0\n");
+                fprintf(out, "\tmult $t0, $t1\n");
+                fprintf(out, "\tmflo $a0\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 break;
 
             case 3:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tdiv $t0, $t1\n");
-                fprintf(saida, "\tmflo $a0\n");
+                fprintf(out, "\tdiv $t0, $t1\n");
+                fprintf(out, "\tmflo $a0\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 break;
 
             case 4:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tslt $a0, $t0, $t1\n");
+                fprintf(out, "\tslt $a0, $t0, $t1\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 break;
 
             case 5:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tslt $t2, $t0, $t1\n");
-                fprintf(saida, "\tbeq $t0, $t1, verdadeiro%d\n",rotulo);
+                fprintf(out, "\tslt $t2, $t0, $t1\n");
+                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
                 
-                fprintf(saida, "\tori $t3, $0, 0\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $t3, $0, 0\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tverdadeiro%d:\n", rotulo);
-                fprintf(saida, "\tori $t3, $0, 1\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\tori $t3, $0, 1\n");
+                fprintf(out, "\tend%d:\n", label);
                 
-                fprintf(saida, "\tor $a0, $t2, $t3\n");
+                fprintf(out, "\tor $a0, $t2, $t3\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;
 
             case 6:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tslt $a0, $t1, $t0\n");
+                fprintf(out, "\tslt $a0, $t1, $t0\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
                 
                 break;
 
             case 7:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tslt $t2, $t1, $t0\n");
-                fprintf(saida, "\tbeq $t0, $t1, verdadeiro%d\n",rotulo);
+                fprintf(out, "\tslt $t2, $t1, $t0\n");
+                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
                 
-                fprintf(saida, "\tori $t3, $0, 0\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $t3, $0, 0\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tverdadeiro%d:\n", rotulo);
-                fprintf(saida, "\tori $t3, $0, 1\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\tori $t3, $0, 1\n");
+                fprintf(out, "\tend%d:\n", label);
                 
-                fprintf(saida, "\tor $a0, $t2, $t3\n");
+                fprintf(out, "\tor $a0, $t2, $t3\n");
                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
                 
             case 8:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tbeq $t0, $t1, verdadeiro%d\n",rotulo);
+                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
                 
-                fprintf(saida, "\tori $a0, $0, 0\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $a0, $0, 0\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tverdadeiro%d:\n", rotulo);
-                fprintf(saida, "\tori $a0, $0, 1\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\tori $a0, $0, 1\n");
+                fprintf(out, "\tend%d:\n", label);
                                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
                 
             case 9:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tbeq $t0, $t1, falso%d\n",rotulo);
+                fprintf(out, "\tbeq $t0, $t1, falso%d\n",label);
                 
-                fprintf(saida, "\tori $a0, $0, 1\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $a0, $0, 1\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tfalso%d:\n", rotulo);
-                fprintf(saida, "\tori $a0, $0, 0\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tfalso%d:\n", label);
+                fprintf(out, "\tori $a0, $0, 0\n");
+                fprintf(out, "\tend%d:\n", label);
                                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
                 
             case 10:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tbeq $t0, $0, falso%d\n",rotulo);
-                fprintf(saida, "\tbeq $t1, $0, falso%d\n",rotulo);
+                fprintf(out, "\tbeq $t0, $0, falso%d\n",label);
+                fprintf(out, "\tbeq $t1, $0, falso%d\n",label);
                 
-                fprintf(saida, "\tori $a0, $0, 1\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $a0, $0, 1\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tfalso%d:\n", rotulo);
-                fprintf(saida, "\tori $a0, $0, 0\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tfalso%d:\n", label);
+                fprintf(out, "\tori $a0, $0, 0\n");
+                fprintf(out, "\tend%d:\n", label);
                                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
                 
             case 11:
             
-                tratarExp (raiz->operando[0]);
-                tratarExp (raiz->operando[1]);
+                genExp (raiz->operands[0]);
+                genExp (raiz->operands[1]);
                 
-                fprintf(saida, "\tlw $t1, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t1, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tbne $t0, $0, verdadeiro%d\n",rotulo);
-                fprintf(saida, "\tbne $t1, $0, verdadeiro%d\n",rotulo);
+                fprintf(out, "\tbne $t0, $0, verdadeiro%d\n",label);
+                fprintf(out, "\tbne $t1, $0, verdadeiro%d\n",label);
                 
-                fprintf(saida, "\tori $a0, $0, 0\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $a0, $0, 0\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tverdadeiro%d:\n", rotulo);
-                fprintf(saida, "\tori $a0, $0, 1\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\tori $a0, $0, 1\n");
+                fprintf(out, "\tend%d:\n", label);
                                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
                 
             case 12:
             
-                tratarExp (raiz->operando[0]);
+                genExp (raiz->operands[0]);
                 
-                fprintf(saida, "\tlw $t0, 4($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, 4\n");
+                fprintf(out, "\tlw $t0, 4($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(saida, "\tbne $t0, $0, falso%d\n",rotulo);
+                fprintf(out, "\tbne $t0, $0, falso%d\n",label);
                 
-                fprintf(saida, "\tori $a0, $0, 1\n");
-                fprintf(saida, "\tb end%d\n", rotulo);
+                fprintf(out, "\tori $a0, $0, 1\n");
+                fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(saida, "\tfalso%d:\n", rotulo);
-                fprintf(saida, "\tori $a0, $0, 0\n");
-                fprintf(saida, "\tend%d:\n", rotulo);
+                fprintf(out, "\tfalso%d:\n", label);
+                fprintf(out, "\tori $a0, $0, 0\n");
+                fprintf(out, "\tend%d:\n", label);
                                 
-                fprintf(saida, "\tsw $a0, 0($sp)\n");
-                fprintf(saida, "\taddiu $sp, $sp, -4\n");
-                rotulo++;
+                fprintf(out, "\tsw $a0, 0($sp)\n");
+                fprintf(out, "\taddiu $sp, $sp, -4\n");
+                label++;
                 
                 break;  
 
             default:
             
                 if (!strcmp(raiz->elemento, "funccall")){
-                    tratarFunccall(raiz);
-                    fprintf(saida, "\tsw $v0, 0($sp)\n");
-                    fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                    genFuncCall(raiz);
+                    fprintf(out, "\tsw $v0, 0($sp)\n");
+                    fprintf(out, "\taddiu $sp, $sp, -4\n");
                 }
                 else{
                     int tamanho = strlen(raiz->elemento);
@@ -516,26 +516,26 @@ void tratarExp (struct nodo* raiz){
                             break;
                     }
                     if (i == tamanho){
-                        fprintf(saida, "\tli $a0, %s\n",raiz->elemento);
-                        fprintf(saida, "\tsw $a0, 0($sp)\n");
-                        fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                        fprintf(out, "\tli $a0, %s\n",raiz->elemento);
+                        fprintf(out, "\tsw $a0, 0($sp)\n");
+                        fprintf(out, "\taddiu $sp, $sp, -4\n");
                     }
                     else{
                         i = 0;
-                        while (parametros->operando[i] != NULL){
-                            if (!strcmp(parametros->operando[i]->elemento,raiz->elemento)){
+                        while (params->operands[i] != NULL){
+                            if (!strcmp(params->operands[i]->elemento,raiz->elemento)){
                                 break;
                             }
                             i++;
                         }
-                        if (parametros->operando[i] != NULL){
-                            fprintf(saida, "\tlw $a0, %d($fp)\n",4+i*4);
+                        if (params->operands[i] != NULL){
+                            fprintf(out, "\tlw $a0, %d($fp)\n",4+i*4);
                         }
                         else {
-                            fprintf(saida, "\tlw $a0, %s\n",raiz->elemento);    
+                            fprintf(out, "\tlw $a0, %s\n",raiz->elemento);    
                         }
-                        fprintf(saida, "\tsw $a0, 0($sp)\n");
-                        fprintf(saida, "\taddiu $sp, $sp, -4\n");
+                        fprintf(out, "\tsw $a0, 0($sp)\n");
+                        fprintf(out, "\taddiu $sp, $sp, -4\n");
                     }
                     
                 }
@@ -544,166 +544,166 @@ void tratarExp (struct nodo* raiz){
         return; 
 }
 
-void tratarBreak (struct nodo* raiz){
+void genBreak (struct Node2* raiz){
     
-    if (sairloop != -1){
-        fprintf(saida, "\tb falsowhile%d\n", sairloop);         
+    if (leaveloop != -1){
+        fprintf(out, "\tb falsowhile%d\n", leaveloop);         
     }
     
 }
 
-void tratarContinue (struct nodo* raiz){
+void genContinue (struct Node2* raiz){
     
-    if (sairloop != -1){
-        fprintf(saida, "\tb verdadeiro%d\n", sairloop);         
+    if (leaveloop != -1){
+        fprintf(out, "\tb verdadeiro%d\n", leaveloop);         
     }
     
 }
 
-void tratarAssign (struct nodo* raiz){
+void genAssign (struct Node2* raiz){
     
     int i = 0;
 
-    if (raiz->operando[1] != NULL){
+    if (raiz->operands[1] != NULL){
 
-        tratarExp(raiz->operando[1]);
+        genExp(raiz->operands[1]);
     
-        fprintf(saida, "\tlw $a0, 4($sp)\n");
+        fprintf(out, "\tlw $a0, 4($sp)\n");
         
-        while (parametros->operando[i] != NULL){
-            if (!strcmp(parametros->operando[i]->elemento,raiz->operando[0]->elemento)){
+        while (params->operands[i] != NULL){
+            if (!strcmp(params->operands[i]->elemento,raiz->operands[0]->elemento)){
                 break;
             }
             i++;
         }
 
 
-        if (parametros->operando[i] != NULL){
-            fprintf(saida, "\tsw $a0, %d($fp)\n",4+i*4);
+        if (params->operands[i] != NULL){
+            fprintf(out, "\tsw $a0, %d($fp)\n",4+i*4);
         }
         else {
-            fprintf(saida, "\tsw $a0, %s\n",raiz->operando[0]->elemento );  
+            fprintf(out, "\tsw $a0, %s\n",raiz->operands[0]->elemento );  
         }
 
-        fprintf(saida, "\taddiu $sp, $sp, 4\n");
+        fprintf(out, "\taddiu $sp, $sp, 4\n");
     }
     
     return;
     
 }
 
-void tratarFunccall (struct nodo* raiz){
+void genFuncCall (struct Node2* raiz){
     
     int i = 0;
     int j = 0;
     
-    while (raiz->operando[1]->operando[i] != NULL){
+    while (raiz->operands[1]->operands[i] != NULL){
         i++;
     }
 
     for (j = i - 1; j >= 0; j--){
-        tratarExp(raiz->operando[1]->operando[j]);
+        genExp(raiz->operands[1]->operands[j]);
     }
     
-    if (!strcmp(raiz->operando[0]->elemento,"print")) {
-        fprintf(saida, "\tjal _f_print\n");
-    }
-    else {
-
-        fprintf(saida, "\tsw $t4, 0($sp)\n");
-        fprintf(saida, "\tmove $fp, $sp\n");
-        fprintf(saida, "\taddiu $sp, $sp, -4\n");
-        
-        fprintf(saida, "\tjal _f_%s\n", raiz->operando[0]->elemento);
-        
-        fprintf(saida, "\tlw $t4, 0($fp)\n");
-        fprintf(saida, "\taddiu $sp, $fp, %d\n", 4*i);
-        fprintf(saida, "\tlw $fp, 0($t4)\n");
-    
-    }
-    
-    return;
-    
-}
-
-void tratarIf (struct nodo* raiz){
-    
-    int contador = rotulo;
-    rotulo ++;
-    
-    tratarExp (raiz->operando[0]);
-    
-    fprintf(saida, "\tlw $a0, 4($sp)\n");
-    fprintf(saida, "\taddiu $sp, $sp, 4\n");
-    fprintf(saida, "\tbeqz $a0, falso%d\n", contador);  
-    
-    tratarBloco (raiz->operando[1]);
-    
-    fprintf(saida, "\tb end%d\n", contador);
-    fprintf(saida, "\tfalso%d:\n", contador);
-    
-    if (raiz->operando[2] != NULL){
-        
-        tratarBloco(raiz->operando[2]);
-        
-    }
-    
-    fprintf(saida, "\tend%d:\n", contador);
-    
-    return;
-}
-
-void tratarWhile (struct nodo* raiz){
-    
-    int antigoSair = sairloop; 
-    int contador = rotulo;
-    sairloop = contador;
-    rotulo ++;
-        
-    fprintf(saida, "\tverdadeiro%d:\n",contador);
-    
-    tratarExp (raiz->operando[0]);
-    
-    fprintf(saida, "\tlw $a0, 4($sp)\n");
-    fprintf(saida, "\taddiu $sp, $sp, 4\n");
-    fprintf(saida, "\tbeqz $a0, falsowhile%d\n", contador); 
-    
-    tratarBloco (raiz->operando[1]);
-    
-    sairloop = antigoSair;
-    fprintf(saida, "\tb verdadeiro%d\n", contador);
-    fprintf(saida, "\tfalsowhile%d:\n", contador);
-    
-    return;
-    
-}
-
-void tratarReturn (struct nodo* raiz){
-    
-    if (raiz->operando[0] != NULL){
-        tratarExp (raiz->operando[0]);
-        fprintf(saida, "\tlw $v0, 4($sp)\n");
+    if (!strcmp(raiz->operands[0]->elemento,"print")) {
+        fprintf(out, "\tjal _f_print\n");
     }
     else {
-        fprintf(saida, "\tli $v0, 0\n");
+
+        fprintf(out, "\tsw $t4, 0($sp)\n");
+        fprintf(out, "\tmove $fp, $sp\n");
+        fprintf(out, "\taddiu $sp, $sp, -4\n");
+        
+        fprintf(out, "\tjal _f_%s\n", raiz->operands[0]->elemento);
+        
+        fprintf(out, "\tlw $t4, 0($fp)\n");
+        fprintf(out, "\taddiu $sp, $fp, %d\n", 4*i);
+        fprintf(out, "\tlw $fp, 0($t4)\n");
+    
+    }
+    
+    return;
+    
+}
+
+void genIf (struct Node2* raiz){
+    
+    int contador = label;
+    label ++;
+    
+    genExp (raiz->operands[0]);
+    
+    fprintf(out, "\tlw $a0, 4($sp)\n");
+    fprintf(out, "\taddiu $sp, $sp, 4\n");
+    fprintf(out, "\tbeqz $a0, falso%d\n", contador);  
+    
+    genBlock (raiz->operands[1]);
+    
+    fprintf(out, "\tb end%d\n", contador);
+    fprintf(out, "\tfalso%d:\n", contador);
+    
+    if (raiz->operands[2] != NULL){
+        
+        genBlock(raiz->operands[2]);
+        
+    }
+    
+    fprintf(out, "\tend%d:\n", contador);
+    
+    return;
+}
+
+void genWhile (struct Node2* raiz){
+    
+    int antigoSair = leaveloop; 
+    int contador = label;
+    leaveloop = contador;
+    label ++;
+        
+    fprintf(out, "\tverdadeiro%d:\n",contador);
+    
+    genExp (raiz->operands[0]);
+    
+    fprintf(out, "\tlw $a0, 4($sp)\n");
+    fprintf(out, "\taddiu $sp, $sp, 4\n");
+    fprintf(out, "\tbeqz $a0, falsowhile%d\n", contador); 
+    
+    genBlock (raiz->operands[1]);
+    
+    leaveloop = antigoSair;
+    fprintf(out, "\tb verdadeiro%d\n", contador);
+    fprintf(out, "\tfalsowhile%d:\n", contador);
+    
+    return;
+    
+}
+
+void genReturn (struct Node2* raiz){
+    
+    if (raiz->operands[0] != NULL){
+        genExp (raiz->operands[0]);
+        fprintf(out, "\tlw $v0, 4($sp)\n");
+    }
+    else {
+        fprintf(out, "\tli $v0, 0\n");
     }
 
-    fprintf(saida, "\tlw $ra, 4($t4)\n");
-    fprintf(saida, "\tjr $ra\n");
+    fprintf(out, "\tlw $ra, 4($t4)\n");
+    fprintf(out, "\tjr $ra\n");
 
     return; 
 }
 
-void tratarBloco(struct nodo* raiz) {
+void genBlock(struct Node2* raiz) {
     
     int i, j;
     
     j = 0;
     
-    while (raiz->operando[j] != NULL){
+    while (raiz->operands[j] != NULL){
     
         for (i = 0; i < 8 ; i++){
-            if (!strcmp(raiz->operando[j]->elemento, bloco[i])){
+            if (!strcmp(raiz->operands[j]->elemento, block[i])){
               break;
             }
         }
@@ -713,35 +713,35 @@ void tratarBloco(struct nodo* raiz) {
             case 0:
                 
             case 1:
-                tratarAssign(raiz->operando[j]);
+                genAssign(raiz->operands[j]);
                 break;
 
             case 2:
-                tratarFunccall(raiz->operando[j]);
+                genFuncCall(raiz->operands[j]);
                 break;
 
             case 3:
-                tratarIf(raiz->operando[j]);
+                genIf(raiz->operands[j]);
                 break;
 
             case 4:
-                tratarWhile(raiz->operando[j]);
+                genWhile(raiz->operands[j]);
                 break;
 
             case 5:
-                tratarReturn(raiz->operando[j]);
+                genReturn(raiz->operands[j]);
                 break;
 
             case 6:
-                tratarBreak(raiz->operando[j]);
+                genBreak(raiz->operands[j]);
                 break;
 
             case 7:
-                tratarContinue (raiz->operando[j]);
+                genContinue (raiz->operands[j]);
                 break;  
 
             default:
-                fprintf(saida, "Erro na arvore. GeradorCodigo");
+                fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
         }
         j++;
@@ -751,147 +751,96 @@ void tratarBloco(struct nodo* raiz) {
     return;
 }
 
-int geradorFuncao (struct nodo* raiz){
+int genFunc (struct Node2* raiz){
     
     if (raiz == NULL){
-        fprintf(saida, "Erro na arvore. GeradorCodigo");
+        fprintf(out, "Erro na arvore. GeradorCodigo");
         exit(1);
     }
     
-    fprintf(saida, ".data\n");
+    fprintf(out, ".data\n");
 
-    procurarDeclaracoes(raiz);
+    findDecs(raiz);
         
-    fprintf(saida, "\n");
-    fprintf(saida, ".text\n");
-    fprintf(saida, "\n");
+    fprintf(out, "\n");
+    fprintf(out, ".text\n");
+    fprintf(out, "\n");
     
-    fprintf(saida, "_f_print:\n");
-    fprintf(saida, "\tlw $a0, 4($sp)\n");
-    fprintf(saida, "\taddiu $sp, $sp, 4\n");
-    fprintf(saida, "\tli $v0, 1\n");
-    fprintf(saida, "\tsyscall\n");
-    fprintf(saida, "\tli $v0, 11\n");
-    fprintf(saida, "\tli $a0, 0x0a\n");
-    fprintf(saida, "\tsyscall\n");
-    fprintf(saida, "\tjr $ra\n");
+    fprintf(out, "_f_print:\n");
+    fprintf(out, "\tlw $a0, 4($sp)\n");
+    fprintf(out, "\taddiu $sp, $sp, 4\n");
+    fprintf(out, "\tli $v0, 1\n");
+    fprintf(out, "\tsyscall\n");
+    fprintf(out, "\tli $v0, 11\n");
+    fprintf(out, "\tli $a0, 0x0a\n");
+    fprintf(out, "\tsyscall\n");
+    fprintf(out, "\tjr $ra\n");
 
     int aux;
     int i,j;
     
-    struct nodo* funcao;
+    struct Node2* funcao;
     
     i = 0;
         
-    while (raiz->operando[i] != NULL) {
+    while (raiz->operands[i] != NULL) {
         
-        funcao = raiz->operando[i];
+        funcao = raiz->operands[i];
         j = 0;
         aux=-4;
                 
         if (!strcmp(funcao->elemento, "decfunc")){
             
-            if (funcao->operando[0] == NULL){
-                fprintf(saida, "Erro na arvore. GeradorCodigo");
+            if (funcao->operands[0] == NULL){
+                fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             }
-            fprintf(saida, "\n");
-            fprintf(saida, "_f_%s:\n", funcao->operando[0]->elemento);  
-            fprintf(saida, "\tsw $ra, 0($sp)\n");
-            fprintf(saida, "\taddiu $sp, $sp, -4\n");
+            fprintf(out, "\n");
+            fprintf(out, "_f_%s:\n", funcao->operands[0]->elemento);  
+            fprintf(out, "\tsw $ra, 0($sp)\n");
+            fprintf(out, "\taddiu $sp, $sp, -4\n");
 
-            if (funcao->operando[1] == NULL){
-                fprintf(saida, "Erro na arvore. GeradorCodigo");
+            if (funcao->operands[1] == NULL){
+                fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             } 
             
-            parametros = funcao->operando[1];
+            params = funcao->operands[1];
 
-            fprintf(saida, "\tsw $fp, 0($sp)\n");
-            fprintf(saida, "\tmove $t4, $sp\n");
-            fprintf(saida, "\taddiu $sp, $sp, -4\n");
+            fprintf(out, "\tsw $fp, 0($sp)\n");
+            fprintf(out, "\tmove $t4, $sp\n");
+            fprintf(out, "\taddiu $sp, $sp, -4\n");
             
-            if (funcao->operando[2] == NULL){
-                fprintf(saida, "Erro na arvore. GeradorCodigo");
+            if (funcao->operands[2] == NULL){
+                fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             }
 
-            tratarBloco(funcao->operando[2]);
+            genBlock(funcao->operands[2]);
             
-            fprintf(saida, "\tli $v0, 0\n");
-            fprintf(saida, "\tlw $ra, 4($t4)\n");
-            fprintf(saida, "\tjr $ra\n");   
+            fprintf(out, "\tli $v0, 0\n");
+            fprintf(out, "\tlw $ra, 4($t4)\n");
+            fprintf(out, "\tjr $ra\n");   
         }
         i++;
         
     }
     
-    fprintf(saida, "\n");
-    fprintf(saida, "main:\n");
+    fprintf(out, "\n");
+    fprintf(out, "main:\n");
     
     i = 0;
 
-    while (raiz->operando[i] != NULL) {
-        funcao = raiz->operando[i];
+    while (raiz->operands[i] != NULL) {
+        funcao = raiz->operands[i];
         if (!strcmp(funcao->elemento, "decvar")) {
-            tratarAssign(funcao);
+            genAssign(funcao);
         }
         i++;
     }
     
-    fprintf(saida, "\tjal _f_main\n");
-    fprintf(saida, "\tli $v0, 10\n");
-    fprintf(saida, "\tsyscall\n");
+    fprintf(out, "\tjal _f_main\n");
+    fprintf(out, "\tli $v0, 10\n");
+    fprintf(out, "\tsyscall\n");
     
 }
-
-/* teste (struct nodo* raiz) {
-    
-    int i = 0;
-    fprintf (saida, "[");
-    fprintf (saida, raiz->elemento);
-    
-    while (raiz->operando[i] != NULL) {
-        teste(raiz->operando[i]);
-        i++;
-    }
-    
-    fprintf (saida, "]");
-    
-} */
-
-// int main () {
-    
-//     struct nodo* raiz = calloc (1, sizeof(struct nodo));
-    
-//     int tarvore;
-    
-//     if ((saida=fopen("arvoreSintatica","r"))==NULL){
-//         fprintf(stderr, "Arquivo não pode ser aberto\n");
-//         exit(1);  
-//     }
-        
-//     fseek(saida, 0, SEEK_END);
-//     tarvore=ftell(saida);
-//     fseek(saida, 0, SEEK_SET);
-                
-//     char* arvore = (char*)calloc(tarvore+1, sizeof(char));
-//     fread(arvore, 1, tarvore, saida);
-
-//     fclose(saida);
-    
-//     posicao = 0;
-        
-//     gerarEstrutura (arvore, &raiz);
-//     corrigirArvore(&raiz);
-        
-//     if ((saida=fopen("saida.asm","w"))==NULL){
-//          fprintf(stderr, "Arquivo não pode ser aberto\n");
-//          exit(1);  
-//     }   
-    
-//     geradorFuncao(raiz);
-//     fclose(saida);  
-
-//     return 0;
-// }

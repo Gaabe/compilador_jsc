@@ -1,4 +1,6 @@
 .data
+	abba:       .word   0
+	baaabi:       .word   0
 
 .text
 
@@ -18,67 +20,7 @@ _f_main:
 	sw $fp, 0($sp)
 	move $t4, $sp
 	addiu $sp, $sp, -4
-	li $a0, 2
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	li $a0, 3
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	lw $t1, 4($sp)
-	addiu $sp, $sp, 4
-	lw $t0, 4($sp)
-	addiu $sp, $sp, 4
-	slt $t2, $t0, $t1
-	beq $t0, $t1, verdadeiro1
-	ori $t3, $0, 0
-	b end1
-	verdadeiro1:
-	ori $t3, $0, 1
-	end1:
-	or $a0, $t2, $t3
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	lw $t0, 4($sp)
-	addiu $sp, $sp, 4
-	bne $t0, $0, falso2
-	ori $a0, $0, 1
-	b end2
-	falso2:
-	ori $a0, $0, 0
-	end2:
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	li $a0, 2
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	li $a0, 3
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	lw $t1, 4($sp)
-	addiu $sp, $sp, 4
-	lw $t0, 4($sp)
-	addiu $sp, $sp, 4
-	slt $t2, $t0, $t1
-	beq $t0, $t1, verdadeiro3
-	ori $t3, $0, 0
-	b end3
-	verdadeiro3:
-	ori $t3, $0, 1
-	end3:
-	or $a0, $t2, $t3
-	sw $a0, 0($sp)
-	addiu $sp, $sp, -4
-	lw $t1, 4($sp)
-	addiu $sp, $sp, 4
-	lw $t0, 4($sp)
-	addiu $sp, $sp, 4
-	beq $t0, $0, falso4
-	beq $t1, $0, falso4
-	ori $a0, $0, 1
-	b end4
-	falso4:
-	ori $a0, $0, 0
-	end4:
+	lw $a0, baaabi
 	sw $a0, 0($sp)
 	addiu $sp, $sp, -4
 	lw $a0, 4($sp)
@@ -91,11 +33,36 @@ _f_main:
 	b end0
 	falso0:
 	end0:
+	li $a0, 1
+	sw $a0, 0($sp)
+	addiu $sp, $sp, -4
+	lw $a0, 4($sp)
+	sw $a0, baaabi
+	addiu $sp, $sp, 4
+	lw $a0, baaabi
+	sw $a0, 0($sp)
+	addiu $sp, $sp, -4
+	lw $a0, 4($sp)
+	addiu $sp, $sp, 4
+	beqz $a0, falso1
+	li $a0, 1
+	sw $a0, 0($sp)
+	addiu $sp, $sp, -4
+	jal _f_print
+	b end1
+	falso1:
+	end1:
 	li $v0, 0
 	lw $ra, 4($t4)
 	jr $ra
 
 main:
+	li $a0, 0
+	sw $a0, 0($sp)
+	addiu $sp, $sp, -4
+	lw $a0, 4($sp)
+	sw $a0, baaabi
+	addiu $sp, $sp, 4
 	jal _f_main
 	li $v0, 10
 	syscall
