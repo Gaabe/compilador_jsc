@@ -10,7 +10,7 @@ FILE *out;
 int leaveloop = -1;
 
 struct Node2{
-    char* elemento;
+    char* op;
     struct Node2 *operands[maxNodes];
 };
 
@@ -44,12 +44,12 @@ static const char *operators[] = {
     "!",
 };
 
-void genBlock (struct Node2* raiz);
-void genFuncCall (struct Node2* raiz);
+void genBlock (struct Node2* root);
+void genFuncCall (struct Node2* root);
 
-void genStruct (char* arvore, struct Node2** raiz) {
+void genStruct (char* tree, struct Node2** root) {
     
-    struct Node2* p = (*raiz);
+    struct Node2* p = (*root);
     
     int start = 0;
     int x = 0;
@@ -59,10 +59,10 @@ void genStruct (char* arvore, struct Node2** raiz) {
     aux[1] = '\0';
         
     while (1) {
-        if (arvore[position] == '['){
+        if (tree[position] == '['){
             if (start){
                 p->operands[x] = (Node2*) calloc (1, sizeof(struct Node2));
-                genStruct(arvore, &p->operands[x]);
+                genStruct(tree, &p->operands[x]);
                 x++;
             }
             else {
@@ -70,15 +70,15 @@ void genStruct (char* arvore, struct Node2** raiz) {
                 position++;
             }
         }
-        else if (arvore[position] == ']'){
+        else if (tree[position] == ']'){
             position++;
-            p->elemento = strdup(word);
+            p->op = strdup(word);
             return;
         }
-        else if (arvore[position] == ' ' || arvore[position] == '\t' || arvore[position] == '\n' || arvore[position] == '\v' || arvore[position] == '\f' || arvore[position] == '\r')
+        else if (tree[position] == ' ' || tree[position] == '\t' || tree[position] == '\n' || tree[position] == '\v' || tree[position] == '\f' || tree[position] == '\r')
             position++;
         else {
-            aux[0] = arvore[position];
+            aux[0] = tree[position];
             strcat(word, aux);       
             position++;
         }
@@ -86,23 +86,23 @@ void genStruct (char* arvore, struct Node2** raiz) {
     
 }
 
-void rename (struct Node2** raiz, int nivel, char* elementoOriginal, char* elementoSubstituto){
+void rename (struct Node2** root, int level, char* orig, char* sub){
     
-    struct Node2* p = (*raiz);
+    struct Node2* p = (*root);
     
-    while (p->operands[nivel]!=NULL) {
-        rename(&p->operands[nivel], 0, elementoOriginal, elementoSubstituto);
-        nivel ++;
+    while (p->operands[level]!=NULL) {
+        rename(&p->operands[level], 0, orig, sub);
+        level ++;
     }
     
-    if (!strcmp(p->elemento, elementoOriginal))
-        p->elemento = strdup(elementoSubstituto);
+    if (!strcmp(p->op, orig))
+        p->op = strdup(sub);
     
 }
 
-void fixTree (struct Node2** raiz) {
+void fixTree (struct Node2** root) {
     
-    struct Node2* p = (*raiz);
+    struct Node2* p = (*root);
     
     if (p == NULL)
         return;
@@ -122,10 +122,10 @@ void fixTree (struct Node2** raiz) {
     
     j = 0;
     
-    if (!strcmp(p->elemento, "block")){
+    if (!strcmp(p->op, "block")){
         while(p->operands[j] != NULL){
             while (p->operands[j] != NULL) {
-                if (!strcmp(p->operands[j]->elemento, "decvar"))
+                if (!strcmp(p->operands[j]->op, "decvar"))
                     break;
                 j++;
             }
@@ -135,13 +135,13 @@ void fixTree (struct Node2** raiz) {
                 nomeVariavel[2] = '\0';
                 sprintf(numVariavel,"%d",global_var);
                 strcat(nomeVariavel, numVariavel);
-                rename(&p, j,p->operands[j]->operands[0]->elemento,nomeVariavel); 
+                rename(&p, j,p->operands[j]->operands[0]->op,nomeVariavel); 
                 global_var++;
                 j++;
             }
         }
     }
-    else if (!strcmp(p->elemento, "decfunc")){
+    else if (!strcmp(p->op, "decfunc")){
         
         while (p->operands[1]->operands[j] != NULL) {
             nomeVariavel[0] = '_';
@@ -149,7 +149,7 @@ void fixTree (struct Node2** raiz) {
             nomeVariavel[2] = '\0';
             sprintf(numVariavel,"%d",global_var);
             strcat(nomeVariavel, numVariavel);
-            rename(&p, 1, p->operands[1]->operands[j]->elemento,nomeVariavel);
+            rename(&p, 1, p->operands[1]->operands[j]->op,nomeVariavel);
             global_var++;
             j++;
         }
@@ -159,20 +159,20 @@ void fixTree (struct Node2** raiz) {
     
 }
 
-void findDecs(struct Node2* raiz){
+void findDecs(struct Node2* root){
     
-    if (raiz == NULL)
+    if (root == NULL)
         return;
     
     int i = 0;
     
-    if (!strcmp(raiz->elemento, "decvar")){
-        fprintf(out, "\t%s:       .word   0\n", raiz->operands[0]->elemento); 
+    if (!strcmp(root->op, "decvar")){
+        fprintf(out, "\t%s:       .word   0\n", root->operands[0]->op); 
         
     }
     else {
-        while (raiz->operands[i] != NULL) {
-            findDecs(raiz->operands[i]);
+        while (root->operands[i] != NULL) {
+            findDecs(root->operands[i]);
             i++;
         }   
     }
@@ -180,12 +180,12 @@ void findDecs(struct Node2* raiz){
     return;
 }
 
-void genExp (struct Node2* raiz){
+void genExp (struct Node2* root){
     
     int i;
     
     for (i = 0; i < 13 ; i++){
-        if (!strcmp(raiz->elemento, operators[i])){
+        if (!strcmp(root->op, operators[i])){
           break;
         }
     }
@@ -194,8 +194,8 @@ void genExp (struct Node2* raiz){
             
             case 0:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -212,10 +212,10 @@ void genExp (struct Node2* raiz){
 
             case 1:
             
-                genExp (raiz->operands[0]);
-                if (raiz->operands[1] != NULL){
+                genExp (root->operands[0]);
+                if (root->operands[1] != NULL){
                 
-                    genExp (raiz->operands[1]);
+                    genExp (root->operands[1]);
                     
                     fprintf(out, "\tlw $t1, 4($sp)\n");
                     fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -244,8 +244,8 @@ void genExp (struct Node2* raiz){
 
             case 2:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -263,8 +263,8 @@ void genExp (struct Node2* raiz){
 
             case 3:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -282,8 +282,8 @@ void genExp (struct Node2* raiz){
 
             case 4:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -300,8 +300,8 @@ void genExp (struct Node2* raiz){
 
             case 5:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -329,8 +329,8 @@ void genExp (struct Node2* raiz){
 
             case 6:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -347,8 +347,8 @@ void genExp (struct Node2* raiz){
 
             case 7:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -376,8 +376,8 @@ void genExp (struct Node2* raiz){
                 
             case 8:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -402,8 +402,8 @@ void genExp (struct Node2* raiz){
                 
             case 9:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -428,8 +428,8 @@ void genExp (struct Node2* raiz){
                 
             case 10:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -455,8 +455,8 @@ void genExp (struct Node2* raiz){
                 
             case 11:
             
-                genExp (raiz->operands[0]);
-                genExp (raiz->operands[1]);
+                genExp (root->operands[0]);
+                genExp (root->operands[1]);
                 
                 fprintf(out, "\tlw $t1, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -482,7 +482,7 @@ void genExp (struct Node2* raiz){
                 
             case 12:
             
-                genExp (raiz->operands[0]);
+                genExp (root->operands[0]);
                 
                 fprintf(out, "\tlw $t0, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -504,26 +504,26 @@ void genExp (struct Node2* raiz){
 
             default:
             
-                if (!strcmp(raiz->elemento, "funccall")){
-                    genFuncCall(raiz);
+                if (!strcmp(root->op, "funccall")){
+                    genFuncCall(root);
                     fprintf(out, "\tsw $v0, 0($sp)\n");
                     fprintf(out, "\taddiu $sp, $sp, -4\n");
                 }
                 else{
-                    int tamanho = strlen(raiz->elemento);
+                    int tamanho = strlen(root->op);
                     for (i = 0; i < tamanho; i++){
-                        if (!isdigit(raiz->elemento[i]))
+                        if (!isdigit(root->op[i]))
                             break;
                     }
                     if (i == tamanho){
-                        fprintf(out, "\tli $a0, %s\n",raiz->elemento);
+                        fprintf(out, "\tli $a0, %s\n",root->op);
                         fprintf(out, "\tsw $a0, 0($sp)\n");
                         fprintf(out, "\taddiu $sp, $sp, -4\n");
                     }
                     else{
                         i = 0;
                         while (params->operands[i] != NULL){
-                            if (!strcmp(params->operands[i]->elemento,raiz->elemento)){
+                            if (!strcmp(params->operands[i]->op,root->op)){
                                 break;
                             }
                             i++;
@@ -532,7 +532,7 @@ void genExp (struct Node2* raiz){
                             fprintf(out, "\tlw $a0, %d($fp)\n",4+i*4);
                         }
                         else {
-                            fprintf(out, "\tlw $a0, %s\n",raiz->elemento);    
+                            fprintf(out, "\tlw $a0, %s\n",root->op);    
                         }
                         fprintf(out, "\tsw $a0, 0($sp)\n");
                         fprintf(out, "\taddiu $sp, $sp, -4\n");
@@ -544,7 +544,7 @@ void genExp (struct Node2* raiz){
         return; 
 }
 
-void genBreak (struct Node2* raiz){
+void genBreak (){
     
     if (leaveloop != -1){
         fprintf(out, "\tb falsowhile%d\n", leaveloop);         
@@ -552,7 +552,7 @@ void genBreak (struct Node2* raiz){
     
 }
 
-void genContinue (struct Node2* raiz){
+void genContinue (){
     
     if (leaveloop != -1){
         fprintf(out, "\tb verdadeiro%d\n", leaveloop);         
@@ -560,18 +560,18 @@ void genContinue (struct Node2* raiz){
     
 }
 
-void genAssign (struct Node2* raiz){
+void genAssign (struct Node2* root){
     
     int i = 0;
 
-    if (raiz->operands[1] != NULL){
+    if (root->operands[1] != NULL){
 
-        genExp(raiz->operands[1]);
+        genExp(root->operands[1]);
     
         fprintf(out, "\tlw $a0, 4($sp)\n");
         
         while (params->operands[i] != NULL){
-            if (!strcmp(params->operands[i]->elemento,raiz->operands[0]->elemento)){
+            if (!strcmp(params->operands[i]->op,root->operands[0]->op)){
                 break;
             }
             i++;
@@ -582,7 +582,7 @@ void genAssign (struct Node2* raiz){
             fprintf(out, "\tsw $a0, %d($fp)\n",4+i*4);
         }
         else {
-            fprintf(out, "\tsw $a0, %s\n",raiz->operands[0]->elemento );  
+            fprintf(out, "\tsw $a0, %s\n",root->operands[0]->op );  
         }
 
         fprintf(out, "\taddiu $sp, $sp, 4\n");
@@ -592,20 +592,20 @@ void genAssign (struct Node2* raiz){
     
 }
 
-void genFuncCall (struct Node2* raiz){
+void genFuncCall (struct Node2* root){
     
     int i = 0;
     int j = 0;
     
-    while (raiz->operands[1]->operands[i] != NULL){
+    while (root->operands[1]->operands[i] != NULL){
         i++;
     }
 
     for (j = i - 1; j >= 0; j--){
-        genExp(raiz->operands[1]->operands[j]);
+        genExp(root->operands[1]->operands[j]);
     }
     
-    if (!strcmp(raiz->operands[0]->elemento,"print")) {
+    if (!strcmp(root->operands[0]->op,"print")) {
         fprintf(out, "\tjal _f_print\n");
     }
     else {
@@ -614,7 +614,7 @@ void genFuncCall (struct Node2* raiz){
         fprintf(out, "\tmove $fp, $sp\n");
         fprintf(out, "\taddiu $sp, $sp, -4\n");
         
-        fprintf(out, "\tjal _f_%s\n", raiz->operands[0]->elemento);
+        fprintf(out, "\tjal _f_%s\n", root->operands[0]->op);
         
         fprintf(out, "\tlw $t4, 0($fp)\n");
         fprintf(out, "\taddiu $sp, $fp, %d\n", 4*i);
@@ -626,62 +626,62 @@ void genFuncCall (struct Node2* raiz){
     
 }
 
-void genIf (struct Node2* raiz){
+void genIf (struct Node2* root){
     
-    int contador = label;
+    int count = label;
     label ++;
     
-    genExp (raiz->operands[0]);
+    genExp (root->operands[0]);
     
     fprintf(out, "\tlw $a0, 4($sp)\n");
     fprintf(out, "\taddiu $sp, $sp, 4\n");
-    fprintf(out, "\tbeqz $a0, falso%d\n", contador);  
+    fprintf(out, "\tbeqz $a0, falso%d\n", count);  
     
-    genBlock (raiz->operands[1]);
+    genBlock (root->operands[1]);
     
-    fprintf(out, "\tb end%d\n", contador);
-    fprintf(out, "\tfalso%d:\n", contador);
+    fprintf(out, "\tb end%d\n", count);
+    fprintf(out, "\tfalso%d:\n", count);
     
-    if (raiz->operands[2] != NULL){
+    if (root->operands[2] != NULL){
         
-        genBlock(raiz->operands[2]);
+        genBlock(root->operands[2]);
         
     }
     
-    fprintf(out, "\tend%d:\n", contador);
+    fprintf(out, "\tend%d:\n", count);
     
     return;
 }
 
-void genWhile (struct Node2* raiz){
+void genWhile (struct Node2* root){
     
-    int antigoSair = leaveloop; 
-    int contador = label;
-    leaveloop = contador;
+    int leaveloopold = leaveloop; 
+    int count = label;
+    leaveloop = count;
     label ++;
         
-    fprintf(out, "\tverdadeiro%d:\n",contador);
+    fprintf(out, "\tverdadeiro%d:\n",count);
     
-    genExp (raiz->operands[0]);
+    genExp (root->operands[0]);
     
     fprintf(out, "\tlw $a0, 4($sp)\n");
     fprintf(out, "\taddiu $sp, $sp, 4\n");
-    fprintf(out, "\tbeqz $a0, falsowhile%d\n", contador); 
+    fprintf(out, "\tbeqz $a0, falsowhile%d\n", count); 
     
-    genBlock (raiz->operands[1]);
+    genBlock (root->operands[1]);
     
-    leaveloop = antigoSair;
-    fprintf(out, "\tb verdadeiro%d\n", contador);
-    fprintf(out, "\tfalsowhile%d:\n", contador);
+    leaveloop = leaveloopold;
+    fprintf(out, "\tb verdadeiro%d\n", count);
+    fprintf(out, "\tfalsowhile%d:\n", count);
     
     return;
     
 }
 
-void genReturn (struct Node2* raiz){
+void genReturn (struct Node2* root){
     
-    if (raiz->operands[0] != NULL){
-        genExp (raiz->operands[0]);
+    if (root->operands[0] != NULL){
+        genExp (root->operands[0]);
         fprintf(out, "\tlw $v0, 4($sp)\n");
     }
     else {
@@ -694,16 +694,16 @@ void genReturn (struct Node2* raiz){
     return; 
 }
 
-void genBlock(struct Node2* raiz) {
+void genBlock(struct Node2* root) {
     
     int i, j;
     
     j = 0;
     
-    while (raiz->operands[j] != NULL){
+    while (root->operands[j] != NULL){
     
         for (i = 0; i < 8 ; i++){
-            if (!strcmp(raiz->operands[j]->elemento, block[i])){
+            if (!strcmp(root->operands[j]->op, block[i])){
               break;
             }
         }
@@ -713,31 +713,31 @@ void genBlock(struct Node2* raiz) {
             case 0:
                 
             case 1:
-                genAssign(raiz->operands[j]);
+                genAssign(root->operands[j]);
                 break;
 
             case 2:
-                genFuncCall(raiz->operands[j]);
+                genFuncCall(root->operands[j]);
                 break;
 
             case 3:
-                genIf(raiz->operands[j]);
+                genIf(root->operands[j]);
                 break;
 
             case 4:
-                genWhile(raiz->operands[j]);
+                genWhile(root->operands[j]);
                 break;
 
             case 5:
-                genReturn(raiz->operands[j]);
+                genReturn(root->operands[j]);
                 break;
 
             case 6:
-                genBreak(raiz->operands[j]);
+                genBreak();
                 break;
 
             case 7:
-                genContinue (raiz->operands[j]);
+                genContinue();
                 break;  
 
             default:
@@ -751,16 +751,16 @@ void genBlock(struct Node2* raiz) {
     return;
 }
 
-int genFunc (struct Node2* raiz){
+int genFunc (struct Node2* root){
     
-    if (raiz == NULL){
+    if (root == NULL){
         fprintf(out, "Erro na arvore. GeradorCodigo");
         exit(1);
     }
     
     fprintf(out, ".data\n");
 
-    findDecs(raiz);
+    findDecs(root);
         
     fprintf(out, "\n");
     fprintf(out, ".text\n");
@@ -779,44 +779,44 @@ int genFunc (struct Node2* raiz){
     int aux;
     int i,j;
     
-    struct Node2* funcao;
+    struct Node2* func;
     
     i = 0;
         
-    while (raiz->operands[i] != NULL) {
+    while (root->operands[i] != NULL) {
         
-        funcao = raiz->operands[i];
+        func = root->operands[i];
         j = 0;
         aux=-4;
                 
-        if (!strcmp(funcao->elemento, "decfunc")){
+        if (!strcmp(func->op, "decfunc")){
             
-            if (funcao->operands[0] == NULL){
+            if (func->operands[0] == NULL){
                 fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             }
             fprintf(out, "\n");
-            fprintf(out, "_f_%s:\n", funcao->operands[0]->elemento);  
+            fprintf(out, "_f_%s:\n", func->operands[0]->op);  
             fprintf(out, "\tsw $ra, 0($sp)\n");
             fprintf(out, "\taddiu $sp, $sp, -4\n");
 
-            if (funcao->operands[1] == NULL){
+            if (func->operands[1] == NULL){
                 fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             } 
             
-            params = funcao->operands[1];
+            params = func->operands[1];
 
             fprintf(out, "\tsw $fp, 0($sp)\n");
             fprintf(out, "\tmove $t4, $sp\n");
             fprintf(out, "\taddiu $sp, $sp, -4\n");
             
-            if (funcao->operands[2] == NULL){
+            if (func->operands[2] == NULL){
                 fprintf(out, "Erro na arvore. GeradorCodigo");
                 exit(1);
             }
 
-            genBlock(funcao->operands[2]);
+            genBlock(func->operands[2]);
             
             fprintf(out, "\tli $v0, 0\n");
             fprintf(out, "\tlw $ra, 4($t4)\n");
@@ -831,10 +831,10 @@ int genFunc (struct Node2* raiz){
     
     i = 0;
 
-    while (raiz->operands[i] != NULL) {
-        funcao = raiz->operands[i];
-        if (!strcmp(funcao->elemento, "decvar")) {
-            genAssign(funcao);
+    while (root->operands[i] != NULL) {
+        func = root->operands[i];
+        if (!strcmp(func->op, "decvar")) {
+            genAssign(func);
         }
         i++;
     }
