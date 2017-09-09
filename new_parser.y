@@ -366,7 +366,7 @@ int genCode(char *file) {
     int tree2;
     
     if ((out=fopen(file,"r"))==NULL){
-        fprintf(stderr, "Arquivo não pode ser aberto\n");
+        fprintf(stderr, "Erro open file\n");
         exit(1);  
     }
         
@@ -385,7 +385,7 @@ int genCode(char *file) {
     fixTree(&root2);
         
     if ((out=fopen(file,"w"))==NULL){
-         fprintf(stderr, "Arquivo não pode ser aberto\n");
+         fprintf(stderr, "Erro open file\n");
          exit(1);  
     }   
     

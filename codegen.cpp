@@ -310,12 +310,12 @@ void genExp (struct Node2* root){
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
                 fprintf(out, "\tslt $t2, $t0, $t1\n");
-                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
+                fprintf(out, "\tbeq $t0, $t1, trueb%d\n",label);
                 
                 fprintf(out, "\tori $t3, $0, 0\n");
                 fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\ttrueb%d:\n", label);
                 fprintf(out, "\tori $t3, $0, 1\n");
                 fprintf(out, "\tend%d:\n", label);
                 
@@ -357,12 +357,12 @@ void genExp (struct Node2* root){
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
                 fprintf(out, "\tslt $t2, $t1, $t0\n");
-                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
+                fprintf(out, "\tbeq $t0, $t1, trueb%d\n",label);
                 
                 fprintf(out, "\tori $t3, $0, 0\n");
                 fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\ttrueb%d:\n", label);
                 fprintf(out, "\tori $t3, $0, 1\n");
                 fprintf(out, "\tend%d:\n", label);
                 
@@ -385,12 +385,12 @@ void genExp (struct Node2* root){
                 fprintf(out, "\tlw $t0, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(out, "\tbeq $t0, $t1, verdadeiro%d\n",label);
+                fprintf(out, "\tbeq $t0, $t1, trueb%d\n",label);
                 
                 fprintf(out, "\tori $a0, $0, 0\n");
                 fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\ttrueb%d:\n", label);
                 fprintf(out, "\tori $a0, $0, 1\n");
                 fprintf(out, "\tend%d:\n", label);
                                 
@@ -464,13 +464,13 @@ void genExp (struct Node2* root){
                 fprintf(out, "\tlw $t0, 4($sp)\n");
                 fprintf(out, "\taddiu $sp, $sp, 4\n");
                 
-                fprintf(out, "\tbne $t0, $0, verdadeiro%d\n",label);
-                fprintf(out, "\tbne $t1, $0, verdadeiro%d\n",label);
+                fprintf(out, "\tbne $t0, $0, trueb%d\n",label);
+                fprintf(out, "\tbne $t1, $0, trueb%d\n",label);
                 
                 fprintf(out, "\tori $a0, $0, 0\n");
                 fprintf(out, "\tb end%d\n", label);
                 
-                fprintf(out, "\tverdadeiro%d:\n", label);
+                fprintf(out, "\ttrueb%d:\n", label);
                 fprintf(out, "\tori $a0, $0, 1\n");
                 fprintf(out, "\tend%d:\n", label);
                                 
@@ -547,7 +547,7 @@ void genExp (struct Node2* root){
 void genBreak (){
     
     if (leaveloop != -1){
-        fprintf(out, "\tb falsowhile%d\n", leaveloop);         
+        fprintf(out, "\tb ww%d\n", leaveloop);         
     }
     
 }
@@ -555,7 +555,7 @@ void genBreak (){
 void genContinue (){
     
     if (leaveloop != -1){
-        fprintf(out, "\tb verdadeiro%d\n", leaveloop);         
+        fprintf(out, "\tb trueb%d\n", leaveloop);         
     }
     
 }
@@ -660,19 +660,19 @@ void genWhile (struct Node2* root){
     leaveloop = count;
     label ++;
         
-    fprintf(out, "\tverdadeiro%d:\n",count);
+    fprintf(out, "\ttrueb%d:\n",count);
     
     genExp (root->operands[0]);
     
     fprintf(out, "\tlw $a0, 4($sp)\n");
     fprintf(out, "\taddiu $sp, $sp, 4\n");
-    fprintf(out, "\tbeqz $a0, falsowhile%d\n", count); 
+    fprintf(out, "\tbeqz $a0, ww%d\n", count); 
     
     genBlock (root->operands[1]);
     
     leaveloop = leaveloopold;
-    fprintf(out, "\tb verdadeiro%d\n", count);
-    fprintf(out, "\tfalsowhile%d:\n", count);
+    fprintf(out, "\tb trueb%d\n", count);
+    fprintf(out, "\tww%d:\n", count);
     
     return;
     
@@ -741,7 +741,7 @@ void genBlock(struct Node2* root) {
                 break;  
 
             default:
-                fprintf(out, "Erro na arvore. GeradorCodigo");
+                fprintf(out, "error");
                 exit(1);
         }
         j++;
@@ -754,7 +754,7 @@ void genBlock(struct Node2* root) {
 int genFunc (struct Node2* root){
     
     if (root == NULL){
-        fprintf(out, "Erro na arvore. GeradorCodigo");
+        fprintf(out, "error");
         exit(1);
     }
     
@@ -792,7 +792,7 @@ int genFunc (struct Node2* root){
         if (!strcmp(func->op, "decfunc")){
             
             if (func->operands[0] == NULL){
-                fprintf(out, "Erro na arvore. GeradorCodigo");
+                fprintf(out, "error");
                 exit(1);
             }
             fprintf(out, "\n");
@@ -801,7 +801,7 @@ int genFunc (struct Node2* root){
             fprintf(out, "\taddiu $sp, $sp, -4\n");
 
             if (func->operands[1] == NULL){
-                fprintf(out, "Erro na arvore. GeradorCodigo");
+                fprintf(out, "error");
                 exit(1);
             } 
             
@@ -812,7 +812,7 @@ int genFunc (struct Node2* root){
             fprintf(out, "\taddiu $sp, $sp, -4\n");
             
             if (func->operands[2] == NULL){
-                fprintf(out, "Erro na arvore. GeradorCodigo");
+                fprintf(out, "error");
                 exit(1);
             }
 
