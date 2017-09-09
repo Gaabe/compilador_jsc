@@ -847,7 +847,7 @@ int codegen_function (struct node* root){
                 exit(1);
             }
             fprintf(out, "\n"
-           			 	 "_function_%s:\n", 
+           			 	 "_function_%s:\n" 
             		 	 "\tsw $ra, 0($sp)\n"
             		 	 "\taddiu $sp, $sp, -4\n",function->ops[0]->oper);
             
