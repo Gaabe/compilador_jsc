@@ -4,6 +4,7 @@
 #include <string>
 #include <string.h> 
 #include "new_ast.hpp"
+#include "codegen.cpp"
 extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
@@ -357,6 +358,36 @@ Factor: T_OPENPAR Expr T_CLOSEPAR	{$$=$2;}
 
 %%
 
+int gerarCodigo(char *file) {
+
+    if ((out=fopen(file,"r"))==NULL){
+        fprintf(stderr, "Compiler error\n");
+        exit(1);  
+    }
+    
+    struct node* root = (node*) calloc(1, sizeof(struct node));
+    int treeSize;
+    position = 0;
+
+    fseek(out, 0, SEEK_END);
+    treeSize =ftell(out);
+    fseek(out, 0, SEEK_SET);
+    char* tree = (char*)calloc(treeSize+1, sizeof(char));
+    fread(tree, 1, treeSize, out);
+    fclose(out);
+    genstruct (tree, &root);
+    newTree(&root);
+    
+
+    if ((out=fopen(file,"w"))==NULL){
+        fprintf(stderr, "Compiler error\n");
+        exit(1);  
+    }  
+    codegen_function(root);
+    fclose(out); 
+    
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
 	problema_semantico = false;
@@ -383,6 +414,7 @@ int main(int argc, char *argv[]) {
 		fclose(yyin);
 	if(argc > 2)
 		fclose(yyout);
+  gerarCodigo(argv[2]);
 
   return 0;
 }
