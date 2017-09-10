@@ -2,50 +2,40 @@
 #include <stdio.h>
 #include <string.h>
 
-#define maxNodes 100
-
-int position;
-int label = 0;
 FILE *out;
 int leaveloop = -1;
+int position;
+int global_var = 0;
+int label = 0;
+
 
 struct Node2{
     char* op;
-    struct Node2 *operands[maxNodes];
+    struct Node2 *operands[200];
 };
 
 struct Node2* params;
-int global_var = 0;
 
-static const char *block[] = {
-    "decvar",
-    "assign",
-    "funccall",
-    "if",
-    "while",
-    "return",
-    "break",
-    "continue",
-};
+static const char *block[] = {"decvar","assign","funccall","if","while","return","break","continue"};
 
-static const char *operators[] = {
-    "+",
-    "-",
-    "*",
-    "/",
-    "<",
-    "<=",
-    ">",
-    ">=",
-    "==",
-    "!=",
-    "&&",
-    "||",
-    "!",
-};
+static const char *operators[] = {"<","<=",">",">=","==","!=","&&","||","!","+","-","*","/"};
 
 void genBlock (struct Node2* root);
 void genFuncCall (struct Node2* root);
+void genStruct (char* tree, struct Node2** root);
+void rename (struct Node2** root, int level, char* orig, char* sub);
+void fixTree (struct Node2** root);
+void findDecs(struct Node2* root);
+void genExp (struct Node2* root);
+void genBreak ();
+void genContinue ();
+void genAssign (struct Node2* root);
+void genFuncCall (struct Node2* root);
+void genIf (struct Node2* root);
+void genWhile (struct Node2* root);
+void genReturn (struct Node2* root);
+void genBlock(struct Node2* root);
+int genFunc (struct Node2* root);
 
 void genStruct (char* tree, struct Node2** root) {
     
@@ -67,20 +57,20 @@ void genStruct (char* tree, struct Node2** root) {
             }
             else {
                 start = 1;
-                position++;
+                position = position + 1;
             }
         }
         else if (tree[position] == ']'){
-            position++;
+            position = position + 1;
             p->op = strdup(word);
             return;
         }
         else if (tree[position] == ' ' || tree[position] == '\t' || tree[position] == '\n' || tree[position] == '\v' || tree[position] == '\f' || tree[position] == '\r')
-            position++;
+            position = position + 1;
         else {
             aux[0] = tree[position];
             strcat(word, aux);       
-            position++;
+            position = position + 1;
         }
     }
     
@@ -92,7 +82,7 @@ void rename (struct Node2** root, int level, char* orig, char* sub){
     
     while (p->operands[level]!=NULL) {
         rename(&p->operands[level], 0, orig, sub);
-        level ++;
+        level = level + 1;
     }
     
     if (!strcmp(p->op, orig))
@@ -109,8 +99,8 @@ void fixTree (struct Node2** root) {
     
     int i = 0;
     int j;
-    char numVariavel[100];
-    char nomeVariavel[101];
+    char varNum[100];
+    char varName[101];
     
     while (p->operands[i] != NULL) {
         i++;
@@ -127,31 +117,31 @@ void fixTree (struct Node2** root) {
             while (p->operands[j] != NULL) {
                 if (!strcmp(p->operands[j]->op, "decvar"))
                     break;
-                j++;
+                j = j + 1;
             }
             if (p->operands[j] != NULL) {
-                nomeVariavel[0] = '_';
-                nomeVariavel[1] = 'a';
-                nomeVariavel[2] = '\0';
-                sprintf(numVariavel,"%d",global_var);
-                strcat(nomeVariavel, numVariavel);
-                rename(&p, j,p->operands[j]->operands[0]->op,nomeVariavel); 
+                varName[0] = '_';
+                varName[1] = 'a';
+                varName[2] = '\0';
+                sprintf(varNum,"%d",global_var);
+                strcat(varName, varNum);
+                rename(&p, j,p->operands[j]->operands[0]->op,varName); 
                 global_var++;
-                j++;
+                j = j + 1;
             }
         }
     }
     else if (!strcmp(p->op, "decfunc")){
         
         while (p->operands[1]->operands[j] != NULL) {
-            nomeVariavel[0] = '_';
-            nomeVariavel[1] = 'a';
-            nomeVariavel[2] = '\0';
-            sprintf(numVariavel,"%d",global_var);
-            strcat(nomeVariavel, numVariavel);
-            rename(&p, 1, p->operands[1]->operands[j]->op,nomeVariavel);
+            varName[0] = '_';
+            varName[1] = 'a';
+            varName[2] = '\0';
+            sprintf(varNum,"%d",global_var);
+            strcat(varName, varNum);
+            rename(&p, 1, p->operands[1]->operands[j]->op,varName);
             global_var++;
-            j++;
+            j = j + 1;
         }
     }
     
@@ -744,7 +734,7 @@ void genBlock(struct Node2* root) {
                 fprintf(out, "error");
                 exit(1);
         }
-        j++;
+        j = j + 1;
     
     }
     
